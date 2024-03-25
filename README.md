@@ -17,7 +17,7 @@ python PhyloImpute.py -h
 ### 3) Algorithm and Commands
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
 
-PhyloImpute requires an input file (more details below), the desired output file and the phylogenetic tree. 
+PhyloImpute requires an input file, the desired output file, and a phylogenetic tree. 
 
 #### 3.1) Input file
 The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
@@ -42,14 +42,17 @@ Additionally, custom phylogenetic trees can be provided:
 python PhyloImpute.py input_file.csv/ output_file/ --customtree example_custom_tree_Minimal_Y_tree
 ```
 
-The custom phylogenetic trees need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matching the ISOGG tree nomenclature (https://isogg.org/tree/):
+The custom phylogenetic trees need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/):
 
 <img src="/test_run/images/Custom_tree.png" alt="Input file style" width="700"/>
 
+SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue).
 
 #### 3.3) Output file
-The outcome are the observed (**D**,**A**,**X**) and imputed (**d**,**a**,**X**) allelic states for the initially reported SNPs complemented with the SNPs in the phylogenetic tree. 
+The outcome are the observed (**D**,**A**,**X**) and imputed (**d**,**a**,**X**) allelic states for the initially reported SNPs complemented with the SNPs in the phylogenetic tree and a rooting SNP (ROOT). 
 
-<img src="/test_run/images/Output_partly.png" alt="Input file style" width="700"/>
+<img src="/test_run/images/Output_partly.png" alt="Input file style" width="400"/>
 
-PhyloImpute cross-references the allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data. SNPs that cause contradictions between the provided input data and the imputations from the phylogenetic tree, keep the observed alleles and are stored in an additional file **questionable_SNPs.csv** for manual inspection.
+PhyloImpute cross-references the allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data. 
+
+Contradictions can be observed for SNPs that have different allelic states between the provided input data and the imputations from the phylogenetic tree. In these cases, PhyloImpute keeps the observed allelic states and stores the contradicting SNPs in an additional file **questionable_SNPs.csv** for manual inspection of the phylogenetic tree and sequencing data.
