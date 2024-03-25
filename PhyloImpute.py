@@ -19,7 +19,7 @@ parser.add_argument("input", help="Tab-delimited csv file of a dataframe with in
   "Insert variant data as 'A' for ancestral, 'D' for derived allele, and 'X' for missing data. Add variant names as first column and sequence name as header row. "
   "Refrain from using comma separated marker or sequence names.")
 parser.add_argument("output", help="Path to output folder.")
-parser.add_argument("--tree", choices=["Y_minimal","Y_ISOGG_2019-20","Y_NAM-Q-Y_v01"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
+parser.add_argument("--tree", choices=["Y_minimal","Y_ISOGG_2019-20"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
 parser.add_argument("--customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
 
 args = parser.parse_args()
