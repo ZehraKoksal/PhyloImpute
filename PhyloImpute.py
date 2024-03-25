@@ -192,4 +192,4 @@ questionable_SNPs=list(questionable_SNPs)
 df.to_csv("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/output_imputed_data.csv", index=True, sep='\t')
 np.savetxt("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/questionable_SNPs.csv", questionable_SNPs, delimiter="\t", fmt="%s", comments="")
 
-print("PHYMPUTE COMPLETE!")
+print("PHYLOIMPUTE COMPLETE!")
