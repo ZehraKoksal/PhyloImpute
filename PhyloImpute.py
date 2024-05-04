@@ -1,5 +1,3 @@
-#!/mnt/ngs/scratch_areas/nxd426/python3.6_env/bin/python
-
 #don't use commas in snp names
 import argparse
 import time
@@ -28,7 +26,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 #import sample dataframe and variant order 
 df = pd.read_csv(args.input, sep="\t", index_col=1)
-# df = pd.read_csv("/mnt/ngs/scratch_areas/nxd426/3_Q_AmpliSeq/Yleaf/Final_Yleaf_RD20_new_names/OVERVIEW_Qpanel_422_samples.csv", sep="\t", index_col=1)
 #skip numbering column
 df = df.iloc[:,1:]
 #replace missing data with X and (*) with X
@@ -75,7 +72,6 @@ if type(args.customtree) == str:
 if type(args.tree) == str:
     filename = args.tree + ".csv"
     tree_csv_path = os.path.join(current_dir,filename)
-    # tree = pd.read_csv("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/Q_panel_tree_SNP_lib.csv", sep="\t")#, index_col=1)
     tree = pd.read_csv(tree_csv_path, sep="\t")
 
 
@@ -105,7 +101,6 @@ df = pd.concat([df,df_adding_snps])
 
 
 #B) START REPLACING SAMPLE DATAFRAME
-
 
 def preprocess_set(s):
     processed_set= set()
@@ -189,7 +184,10 @@ for col_name, col in df.iteritems():
 # questionable_SNPs = {item for s in questionable_SNPs for item in s}
 questionable_SNPs=list(questionable_SNPs)
 
-df.to_csv("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/output_imputed_data.csv", index=True, sep='\t')
-np.savetxt("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/questionable_SNPs.csv", questionable_SNPs, delimiter="\t", fmt="%s", comments="")
+#Save outputs
+path_output = args.output + "phyloimputed_output.csv"
+path_conflicting_SNPs = args.output + "conflicting_SNPs.csv"
+df.to_csv(path_output, index=True, sep='\t')
+np.savetxt(path_conflicting_SNPs, questionable_SNPs, delimiter="\t", fmt="%s", comments="")
 
-print("PHYLOIMPUTE COMPLETE!")
+print("PHYLOIMPUTE COMPLETE! Two files were generated in "+ str(path_output)+" and "+str(path_conflicting_SNPs))
