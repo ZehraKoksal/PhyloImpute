@@ -36,14 +36,16 @@ df = df.replace(to_replace=r'\(.*\)', value='X',regex=True)
 #TREE to DATABASE
 # if args.tree == "custom":
 if type(args.customtree) == str:
-    print("E")
+    print("CUSTOM TREE")
     print(args.customtree)
     # custom_tree_path = os.path.join(current_dir, "Database_generator.py")
-    tree = pd.read_csv(args.customtree, sep="\t", header=None)
-    print("TREE")
+    tree_og = pd.read_csv(args.customtree, sep="\t", header=None)
+    hgs = tree_og.iloc[1:,0]
+    hgs_list = hgs.values.tolist()
+    tree = tree_og.iloc[:,1:]
+    tree.columns = range(len(tree.columns)) #reindex columns starting from 0
 
-
-    for col_name, col in tree.iteritems():
+    for col_name, col in tree.items():
         first_non_nan_index = col.first_valid_index() ##Get the index with the first non nan
         for index, value in col.iloc[first_non_nan_index:].items():#tree.iterrows():
             if index==len(tree)-1:
@@ -59,21 +61,23 @@ if type(args.customtree) == str:
                     tree.loc[index+1,col_name]  = marker
                     if index==len(tree)-2:
                         break
+
+    tree= tree.iloc[1:,:] #skip the row with only "ROOT" entry
+    tree.insert(loc=0, column="hgs", value=hgs_list)
     custom_tree_path = current_dir + "/custom.csv"
     tree.to_csv(custom_tree_path, index=False, sep='\t')
-    
-    # tree.to_csv("/mnt/ngs/scratch_areas/nxd426/Missing_data_phylogeny/Q_panel_tree_SNP_lib.csv", index=False, sep='\t')
-
     print("SNP database generated and saved!")
-    # if os.path.exists(custom_tree_path):
-        # subprocess.run(["python",custom_tree_path]) #open the database generator python
 
 
 if type(args.tree) == str:
     filename = args.tree + ".csv"
     tree_csv_path = os.path.join(current_dir,filename)
-    tree = pd.read_csv(tree_csv_path, sep="\t")
-
+    tree_df = pd.read_csv(tree_csv_path, sep="\t")
+    #filter out the hg column 
+    tree= tree_df.iloc[:,1:]
+    #now get the haplogroup column
+    hg_table = tree_df.iloc[:,0]
+    hg_table = hg_table.values.tolist()
 
 #turn rows into lists
 tree_lists=[row.dropna().tolist() for index, row in tree.iterrows()]
@@ -90,18 +94,16 @@ tree_snps = set(tree_snps)
 
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
-
 adding_snps = tree_snps - df_snps
 adding_snps = {x for x in adding_snps if x is not np.nan}
 adding_snps = {x for x in adding_snps if x != ""}
 
 #add the missing snps from the tree to the data
-df_adding_snps = pd.DataFrame(index=adding_snps, columns=df.columns, data="X")
+df_adding_snps = pd.DataFrame(index=list(adding_snps), columns=df.columns, data="X")
 df = pd.concat([df,df_adding_snps])
 
 
 #B) START REPLACING SAMPLE DATAFRAME
-
 def preprocess_set(s):
     processed_set= set()
     for item in s:
@@ -113,7 +115,9 @@ def preprocess_set(s):
     return processed_set
 
 questionable_SNPs= [] #something is off with these variants position
-for col_name, col in df.iteritems():
+
+Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value"]
+for col_name, col in df.items(): #iteritems()
     lengths_list = []
     filtered_D= df[col_name]=="D"
     sample_D_list = df[filtered_D].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
@@ -128,25 +132,40 @@ for col_name, col in df.iteritems():
         len_overlap = len(overlapping_entries)
         lengths_list.append(len_overlap)
     max_index = lengths_list.index(max(lengths_list))
-    #get the database row that will be used to replace mising data
+        
+    #get the database row that will be used to replace missing data
 
     #are any of these items overlapping with ancestral observations in the sample?
     new_D_db =set(tree_lists[max_index])
     processed_set1=preprocess_set(sample_A_list)
     max_d=preprocess_set(tree_lists[max_index])
+    
+    #GET INFO ON HG OF SAMPLE           ##HG
+    overlapping_derived=processed_D_list.intersection(max_d) #overlap between derived snps and snps of max branches
+    if len(overlapping_derived) == 0:
+        Hg_sample = "No hg pred possible, because no informative derived alleles"
+        Hg_support = "-"
+        Hg_penalty = "-"
+    else:
+        Hg_sample = hg_table[max_index]
+        Hg_support = str(len(overlapping_derived))+"/"+str(len(max_d))
+        Hg_penalty = str(len(processed_set1.intersection(max_d)))+"/"+str(len(max_d))#How many are ancestral
+
+    Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty)) #col_name is the sample name
+
+    
     overlapping_entries=processed_set1.intersection(max_d)
     if len(overlapping_entries)>0:
         questionable_entry = str(col_name)+":"+str(overlapping_entries)
         questionable_SNPs.append(questionable_entry)
 
     
-    #A)get the SNPs from the database row, but exclude thoes that were ancestral in the sample
+    #A)get the SNPs from the database row, but exclude those that were ancestral in the sample
     to_replace_derived = max_d.difference(processed_set1)
     new_D_db = max_d-processed_set1-processed_D_list #the snps in the database row excluding the ancestral and derived variants from the current sample
     if len(new_D_db) > 0:
         filtered_df = df[df.index.isin(new_D_db)]
         unfiltered_df = df[~df.index.isin(new_D_db)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
-    # filtered_df = df[df.index.map(lambda x: any(substring in x.split(',') or substring == x for substring in to_replace_derived))]
         filtered_df[col_name]="d" #make the all derived (filling gaps step) #*for inference
         df=pd.concat([filtered_df,unfiltered_df])
 
@@ -181,13 +200,16 @@ for col_name, col in df.iteritems():
         df=pd.concat([filtered_df,unfiltered_df])
 
 #flatten list of sets:
-# questionable_SNPs = {item for s in questionable_SNPs for item in s}
 questionable_SNPs=list(questionable_SNPs)
 
 #Save outputs
-path_output = args.output + "phyloimputed_output.csv"
-path_conflicting_SNPs = args.output + "conflicting_SNPs.csv"
+path_output = args.output + "_phyloimputed.csv"
+path_conflicting_SNPs = args.output + "_conflicting_SNPs.csv"
+haplogroup_info = args.output + "_haplogroups.csv"
+
 df.to_csv(path_output, index=True, sep='\t')
+np.savetxt(haplogroup_info, Haplogroup_info, delimiter="\t", fmt="%s", comments="")
 np.savetxt(path_conflicting_SNPs, questionable_SNPs, delimiter="\t", fmt="%s", comments="")
+
 
 print("PHYLOIMPUTE COMPLETE! Two files were generated in "+ str(path_output)+" and "+str(path_conflicting_SNPs))
