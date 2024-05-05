@@ -63,8 +63,8 @@ E1a										M33,M132
 E1a											M44																						
 E1b										P177																							
 E1b1											P2,P179																						
-E1b1a												V38,L222#																					
-E1b1a													M2,P1,P189#,V95																				
+E1b1a												V38,L222																					
+E1b1a													M2,P1,P189,V95																				
 E1b1a														M180																			
 E1b1a															L485																		
 E1b1a																L514																	
@@ -181,7 +181,7 @@ H3													PR5932
 IJKLT											M522,M523																						
 IJ												M429,P126																					
 I													M170,M258,U179																				
-I1														M253,L80,P203#																			
+I1														M253,L80,P203																			
 I1															Z131																		
 I1															DF29																		
 I1																CTS6364																	
@@ -475,7 +475,7 @@ N																								L1034
 O																M175,P186																	
 O1'2																	F75																
 O1																		M119															
-O1																			P203#														
+O1																			P203														
 O1																			M110,M50														
 O2																		M268,P31															
 O2																			F1462														
