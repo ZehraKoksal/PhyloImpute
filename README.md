@@ -44,7 +44,7 @@ python PhyloImpute.py input_file.csv/ output_file/ --customtree example_custom_t
 
 The custom phylogenetic trees need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/):
 
-<img src="/test_run/images/Custom_tree.png" alt="Input file style" width="700"/>
+<img src="/test_run/images/Custom_tree_hg.png" alt="Input file style" width="700"/>
 
 SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue).
 
