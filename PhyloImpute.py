@@ -8,24 +8,154 @@ import pandas as pd
 import math
 import numpy as np
 import subprocess
+import warnings
 
 #User input paths
-
-
 parser = argparse.ArgumentParser()
-parser.add_argument("input", help="Tab-delimited csv file of a dataframe with individuals as columns and variants as rows. "
+
+parser.add_argument("-input_format", required=True,choices=["vcf","csv"],help="Option 'vcf' is used when the available input format are .vcf or vcf.gz files. The vcf files need to be quality filtered already! The 'csv' option is used for tab-delimited csv file of a dataframe with individuals as columns and variants as rows. "
   "Insert variant data as 'A' for ancestral, 'D' for derived allele, and 'X' for missing data. Add variant names as first column and sequence name as header row. "
-  "Refrain from using comma separated marker or sequence names.")
-parser.add_argument("output", help="Path to output folder.")
-parser.add_argument("--tree", choices=["Y_minimal"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
-parser.add_argument("--customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
+  "For both options: Refrain from using comma separated marker or sequence names.")
+
+parser.add_argument("-input", required=True, help="For 'vcf' give the folder to the vcf files. For 'csv', give the path to one csv file.")
+parser.add_argument("-output", required=True, help="Path to output folder.")
+
+
+parser.add_argument("-vcf_ref", choices=["GRCh37","GRCh38"],help="When using the 'vcf' option, give the version of the reference genome used for the alignment: GRCh37 or GRCh38") 
+parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze, named in your vcf file? This depends on the reference genome used and can be e.g. 'Y','chrY', 'NC_000024.9' for the human Y chromosome.")
+
+parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38','Anc'(=ancestral allele), 'Der'(=derived allele)")
+
+
+parser.add_argument("-tree", choices=["Y_minimal"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
+parser.add_argument("-customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
 
 args = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-#import sample dataframe and variant order 
-df = pd.read_csv(args.input, sep="\t", index_col=1)
+#FOR VCF INPUT FILE
+
+def check_for_vcf_files(directory):
+    vcf_files = glob.glob(os.path.join(directory, '*.vcf'))
+    if vcf_files:
+        print(f'\nFound .vcf files:')
+        print(vcf_files)
+        return vcf_files
+    else:
+        print('\nNo .vcf files found.')
+        return []
+
+#get_marker_info_from_vcf by using a dictionary file
+if args.input_format == "vcf":
+    if args.tree=="Y_minimal":
+        dic= pd.read_csv("./Y_minimal_dic.csv", sep="\t")
+        #list of positions frm dictionary to filter from vcf file
+        dic_pos = dic[args.vcf_ref].values.tolist()
+        dic_Anc = dic["Anc"].values.tolist()
+        dic_Der = dic["Der"].values.tolist()
+        dic_marker = dic["marker"].values.tolist()
+    #If you are using a custom tree you need to also provide a custom dictionary and extract the information here
+    elif type(args.customtree)==str:
+        dic= pd.read_csv(args.vcf_dic, sep="\t")
+        #list of positions frm dictionary to filter from vcf file
+        dic_pos = dic[args.vcf_ref].values.tolist()
+        dic_Anc = dic["Anc"].values.tolist()
+        dic_Der = dic["Der"].values.tolist()
+        dic_marker = dic["marker"].values.tolist()
+    #Make input table for Phyloimpute
+    input_table = pd.DataFrame({'pos':dic_pos, 'Sample':dic_marker})
+    column_missing_data = len(input_table)*["X"]
+
+
+def extract_sample_name(file_path):
+    split_string = file_path.split("/")
+    sample_name_format = split_string[-1]
+    sample_name = sample_name_format.replace(".csv", "")
+    sample_name = sample_name_format.replace(".vcf", "")
+    # print(sample_name)
+    return sample_name
+
+def filter_vcf_file(file_path):
+    data = []
+    columns = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('#CHROM'):
+                #Split header line to get column names
+                columns = line.strip().split('\t')
+            elif not line.startswith('##'):
+                data.append(line.strip().split('\t'))
+    #Create dataframe from the data
+    df = pd.DataFrame(data,columns=columns)
+    #Filter chromosome column
+    df = df[df["#CHROM"].isin([args.vcf_chr])]
+    #Filter positions of variants from database
+    df = df[df["POS"].isin(dic_pos)]
+    #Also filter that is the derived allele that we see:
+    ##Make list of variant positions in the same order
+    vcf_pos_list = df["POS"].tolist()
+    dic_vcf_pos = dic[dic[args.vcf_ref].isin(vcf_pos_list)]
+    warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
+    #now sort according to order in the list
+    dic_vcf_pos.loc[:, 'sort_key']= pd.Categorical(dic_vcf_pos.loc[:, args.vcf_ref], categories=vcf_pos_list, ordered=True)
+    sorted_dic_vcf_pos= dic_vcf_pos.sort_values('sort_key').drop('sort_key', axis=1)
+    #and remove index
+    sorted_dic_vcf_pos.reset_index(drop=True, inplace=True)
+    #Take the derived alleles from dictionary in same order to the vcf file 
+    #and remove index of filtered vcf
+    df.reset_index(drop=True, inplace=True)
+    #add derived alleles from dic per marker
+    df["der_from_dic_for_pos"] = sorted_dic_vcf_pos["Der"]
+    #compare two columns in a dataframe, if they dont match, remove the row
+    df_filtered = df[df['ALT'] == df['der_from_dic_for_pos']]
+    #Make list of the position column
+    df_filtered_list = df_filtered["POS"].values.tolist()
+    return df_filtered_list
+
+
+
+if args.input_format == "vcf":
+    vcf_files = check_for_vcf_files(args.input)
+    if type(args.vcf_ref)==str and type(args.vcf_chr)==str:
+        print("\nNecessary input files are provided!\n")
+
+    
+        #Now that checking is over, we loop through 
+        for vcf_file in vcf_files:
+            print(f'Processing file: {vcf_file}')
+            derived_variant_pos=filter_vcf_file(vcf_file)
+            sample_name = extract_sample_name(vcf_file)
+            #Add sample column to input table with "X"s in it
+            input_table[sample_name] = column_missing_data
+            #filter for the positions that the sample has derived alleles in the vcf file
+            input_table_D = input_table[input_table["pos"].isin(derived_variant_pos)]
+            input_table_D.loc[:,sample_name]="D"
+            input_table = pd.concat([input_table_D, input_table[~input_table["pos"].isin(derived_variant_pos)]])
+        #replace pos column and reindex
+        input_table.reset_index(drop=True, inplace=True)
+        input_table["pos"]=range(1,len(input_table)+1)
+        df = input_table
+        df.set_index("Sample", inplace=True)
+        #rename column pos
+        df.rename(columns={'pos':0}, inplace=True)
+          
+    else:
+        print("\nOne or both of the input files vcf_ref or vcf_chr are missing! Please provide and rerun. See help function for more information. \n")
+
+
+
+if args.input_format == "csv":
+    print("csv")
+    #import sample dataframe and variant order 
+    df = pd.read_csv(args.input, sep="\t", index_col=1) #INPUT CHANGE
+    print(df)
+    
+
+
+
+#WITH INPUT TABLE
+
 #skip numbering column
 df = df.iloc[:,1:]
 #replace missing data with X and (*) with X
@@ -34,17 +164,14 @@ df = df.replace(to_replace=r'\(.*\)', value='X',regex=True)
 
 
 #TREE to DATABASE
-# if args.tree == "custom":
 if type(args.customtree) == str:
     print("CUSTOM TREE")
     print(args.customtree)
-    # custom_tree_path = os.path.join(current_dir, "Database_generator.py")
     tree_og = pd.read_csv(args.customtree, sep="\t", header=None)
     hgs = tree_og.iloc[1:,0]
     hgs_list = hgs.values.tolist()
     tree = tree_og.iloc[:,1:]
     tree.columns = range(len(tree.columns)) #reindex columns starting from 0
-
     for col_name, col in tree.items():
         first_non_nan_index = col.first_valid_index() ##Get the index with the first non nan
         for index, value in col.iloc[first_non_nan_index:].items():#tree.iterrows():
@@ -92,6 +219,7 @@ for i, r in tree.iterrows():
             tree_snps.append(e)
 tree_snps = set(tree_snps)
 
+
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
 adding_snps = tree_snps - df_snps
@@ -101,7 +229,6 @@ adding_snps = {x for x in adding_snps if x != ""}
 #add the missing snps from the tree to the data
 df_adding_snps = pd.DataFrame(index=list(adding_snps), columns=df.columns, data="X")
 df = pd.concat([df,df_adding_snps])
-
 
 #B) START REPLACING SAMPLE DATAFRAME
 def preprocess_set(s):
@@ -113,7 +240,6 @@ def preprocess_set(s):
         else:
             processed_set.add(item)
     return processed_set
-
 questionable_SNPs= [] #something is off with these variants position
 
 Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value"]
@@ -132,9 +258,8 @@ for col_name, col in df.items(): #iteritems()
         len_overlap = len(overlapping_entries)
         lengths_list.append(len_overlap)
     max_index = lengths_list.index(max(lengths_list))
-        
+       
     #get the database row that will be used to replace missing data
-
     #are any of these items overlapping with ancestral observations in the sample?
     new_D_db =set(tree_lists[max_index])
     processed_set1=preprocess_set(sample_A_list)
@@ -142,6 +267,7 @@ for col_name, col in df.items(): #iteritems()
     
     #GET INFO ON HG OF SAMPLE           ##HG
     overlapping_derived=processed_D_list.intersection(max_d) #overlap between derived snps and snps of max branches
+    
     if len(overlapping_derived) == 0:
         Hg_sample = "No hg pred possible, because no informative derived alleles"
         Hg_support = "-"
@@ -149,15 +275,22 @@ for col_name, col in df.items(): #iteritems()
     else:
         Hg_sample = hg_table[max_index]
         Hg_support = str(len(overlapping_derived))+"/"+str(len(max_d))
-        Hg_penalty = str(len(processed_set1.intersection(max_d)))+"/"+str(len(max_d))#How many are ancestral
-
+        #Penalty comprises of variants in the max_d_branch that are ancestral (but are expected to be derived)
+        #But also of variants that are derived but not in the max_d_branch
+        Hg_penalty_part1 = processed_set1.intersection(max_d)#How many are ancestral in our max res branch
+        Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived
+        Hg_penalty = str(len(Hg_penalty_part1)+len(Hg_penalty_part2))+"/"+str(len(max_d))#How many are ancestral
     Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty)) #col_name is the sample name
 
     
     overlapping_entries=processed_set1.intersection(max_d)
-    if len(overlapping_entries)>0:
-        questionable_entry = str(col_name)+":"+str(overlapping_entries)
-        questionable_SNPs.append(questionable_entry)
+    if len(processed_D_list) > 0:
+        if len(Hg_penalty_part1)>0:
+            questionable_entry_A = str(col_name)+":"+str(Hg_penalty_part1)+" (ancestral allele inside main branch)"
+            questionable_SNPs.append(questionable_entry_A)
+        if len(Hg_penalty_part2)>0:
+            questionable_entry_D = str(col_name)+":"+str(Hg_penalty_part2)+" (derived allele inside parallel branch)"
+            questionable_SNPs.append(questionable_entry_D)
 
     
     #A)get the SNPs from the database row, but exclude those that were ancestral in the sample
@@ -166,7 +299,7 @@ for col_name, col in df.items(): #iteritems()
     if len(new_D_db) > 0:
         filtered_df = df[df.index.isin(new_D_db)]
         unfiltered_df = df[~df.index.isin(new_D_db)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
-        filtered_df[col_name]="d" #make the all derived (filling gaps step) #*for inference
+        filtered_df.loc[:,col_name]="d" #make the all derived (filling gaps step) #*for inference
         df=pd.concat([filtered_df,unfiltered_df])
 
     #B)turn X to A
@@ -196,7 +329,7 @@ for col_name, col in df.items(): #iteritems()
         unfiltered_df = df[~df.index.isin(A_list_markers)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
         # print(filtered_df)
         # print(unfiltered_df)
-        filtered_df[col_name]="a" #make the all derived (filling gaps step) #*for inference
+        filtered_df.loc[:,col_name]="a" #make the all derived (filling gaps step) #*for inference
         df=pd.concat([filtered_df,unfiltered_df])
 
 #flatten list of sets:
@@ -212,4 +345,4 @@ np.savetxt(haplogroup_info, Haplogroup_info, delimiter="\t", fmt="%s", comments=
 np.savetxt(path_conflicting_SNPs, questionable_SNPs, delimiter="\t", fmt="%s", comments="")
 
 
-print("PHYLOIMPUTE COMPLETE! Two files were generated in "+ str(path_output)+" and "+str(path_conflicting_SNPs))
+print("\nPHYLOIMPUTE COMPLETE!")
