@@ -42,7 +42,7 @@ Additionally, custom phylogenetic trees can be provided:
 python PhyloImpute.py input_file.csv/ output_file/ --customtree example_custom_tree_Minimal_Y_tree
 ```
 
-The custom phylogenetic trees need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/):
+The custom phylogenetic tree need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/) with the first column containing haplogroup names of the corresponding tree branch:
 
 <img src="/test_run/images/Custom_tree_hg.png" alt="Input file style" width="700"/>
 
