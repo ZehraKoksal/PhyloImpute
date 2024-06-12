@@ -17,14 +17,19 @@ python PhyloImpute.py -h
 ### 3) Algorithm and Commands
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
 
-The user provides information on the file format of the input file (csv or vcf) using the -input_format parameter; the path to the input file (csv) or folder (vcf) using the -input parameter; the folder for the output folder using -output parameter; the available phylogenetic tree using -tree OR custom phylogenetic tree using -customtree
-
 ```
 python PhyloImpute_vcf.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9 -vcf_dic ./Y_minimal_dic.csv
 
 python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
 
 ```
+**Parameters:**
+**-input_format** The user provides information on the file format of the input file: csv or vcf
+**-input** path to the input file (csv) or folder (vcf) 
+
+**-output** path to the folder for the output files
+**-tree** path to the available phylogenetic tree {Y_minimal} [is mutually exclusive with -customtree] 
+**-customtree** path to custom phylogenetic tree
 
 
 #### 3.1) Input file
