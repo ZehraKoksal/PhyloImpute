@@ -36,7 +36,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 
 **-output** path to the existing folder for the output files
 
-#
+
 #
 #### 3.1.1) CSV Input file
 The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
@@ -85,7 +85,7 @@ The third value is the **penalty value 2** which counts the number of markers in
 #### 3.1.3.3) conflicting_SNPs.csv
 Markers causing either of the two penalty values are stored in the additional file **conflicting_SNPs.csv**: Markers causing **penalty value 1** and **penalty value 2** are stored with the comments "(ancestral allele inside main branch)" and "(derived allele inside parallel branch)", respectively. (In the main output file (phyloimputed.csv), PhyloImpute keeps the observed allelic states.)
 
-#
+
 #
 #### 3.2) VCF file
 ```
@@ -140,7 +140,7 @@ SNPs that cannot be separated ("equal") are divided by commas in the same branch
 When using a custom tree, the user needs to provide information on the marker name, position, alleles in a dictionary file accessed with the parameter **-vcf_dic**
 
 It needs to follow the presented structure:
-<img src="/test_run/images/dictionary_file.png" alt="Input file style" width="700"/>
+<img src="/test_run/images/dictionary_file.png" alt="Input file style" width="350"/>
 
 With the column names "marker" for the marker names identical to the ones used in the custom tree, the "GRCh37" and/or "GRCh38" columns (depending on your vcf file), "Anc" and "Der" columns for the ancestral and derived alleles of the respective variants. And the "Hg" column with the haplogroups defined by the respective marker.
 
