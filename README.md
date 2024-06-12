@@ -17,16 +17,27 @@ python PhyloImpute.py -h
 ### 3) Algorithm and Commands
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
 
-PhyloImpute requires an input file, the desired output file, and a phylogenetic tree. 
+The user provides information on the file format of the input file (csv or vcf) using the -input_format parameter; the path to the input file (csv) or folder (vcf) using the -input parameter; the folder for the output folder using -output parameter; the available phylogenetic tree using -tree OR custom phylogenetic tree using -customtree
+
+```
+python PhyloImpute_vcf.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9 -vcf_dic ./Y_minimal_dic.csv
+
+python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
+
+```
+
 
 #### 3.1) Input file
+##### 3.1.1) csv format
 The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
 
-<img src="/test_run/images/Input.png" alt="Input file style" width="700"/>
+<img src="/test_run/images/input_csv.png" alt="Input file style" width="700"/>
 
 The rows present variants, the columns individuals.
 The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
 
+##### 3.1.2) vcf format
+Alternatively the path to a folder containing all vcf files can be provided. 
 
 
 #### 3.2) Phylogenetic tree
