@@ -30,11 +30,44 @@ python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -outp
 
 **-input** path to the input file
 
-**-output** path to the folder for the output files
+**-output** path to the existing folder for the output files
 
 **-tree** path to the available phylogenetic tree {Y_minimal} [is mutually exclusive with -customtree] 
 
 **-customtree** path to custom phylogenetic tree
+
+#### 3.1.1) CSV Input file
+The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
+
+<img src="/test_run/images/input_csv.png" alt="Input file style" width="700"/>
+
+The rows present variants, the columns individuals.
+The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
+
+#### 3.1.2) Phylogenetic tree
+The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. 
+
+##### 3.1.2.1) Pre-processed phylogenetic tree
+Currently, a pre-processed phylogenetic tree is available for the human Y chromosome (Minimal Y tree):
+```
+python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
+```
+
+##### 3.1.2.2) Custom phylogenetic tree
+Alternatively, custom phylogenetic trees can be provided:
+```
+python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -output ./output -customtree ./test_run/minimal_y_tree_hgs_custom_example.csv
+```
+
+The custom phylogenetic tree need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/) with the first column containing haplogroup names of the corresponding tree branch:
+
+<img src="/test_run/images/Custom_tree_hg.png" alt="Input file style" width="700"/>
+
+SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue).
+
+#### 3.1.3) CSV Input file
+
+
 
 
 #### 3.2) VCF file
@@ -54,36 +87,12 @@ python PhyloImpute_vcf.py -input_format vcf -input ./test_run/input_vcf/ -output
 
 
 #### 3.1) Input file
-##### 3.1.1) csv format
-The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
-
-<img src="/test_run/images/input_csv.png" alt="Input file style" width="700"/>
-
-The rows present variants, the columns individuals.
-The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
 
 ##### 3.1.2) vcf format
 Alternatively the path to a folder containing all vcf files can be provided. 
 
 
-#### 3.2) Phylogenetic tree
-The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. 
 
-Currently, a pre-processed phylogenetic tree is available for the human Y chromosome (Minimal Y tree):
-```
-python PhyloImpute.py input_file.csv/ output_file/ --tree Y_minimal
-```
-
-Additionally, custom phylogenetic trees can be provided:
-```
-python PhyloImpute.py input_file.csv/ output_file/ --customtree example_custom_tree_Minimal_Y_tree
-```
-
-The custom phylogenetic tree need to be made available by the user in the tab-separated _.csv_ format. One example can be viewed in the test_run folder provided here. It follows the structure presented here and matches the ISOGG tree nomenclature (https://isogg.org/tree/) with the first column containing haplogroup names of the corresponding tree branch:
-
-<img src="/test_run/images/Custom_tree_hg.png" alt="Input file style" width="700"/>
-
-SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue).
 
 #### 3.3) Output files
 The outcome are the observed (**D**,**A**,**X**) and imputed (**d**,**a**,**X**) allelic states for the initially reported SNPs complemented with the SNPs in the phylogenetic tree and a rooting SNP (ROOT). 
