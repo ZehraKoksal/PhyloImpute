@@ -25,10 +25,13 @@ python PhyloImpute_vcf.py -input_format csv -input ./test_run/testdata.csv -outp
 ```
 **Parameters:**
 **-input_format** The user provides information on the file format of the input file: csv or vcf
+
 **-input** path to the input file (csv) or folder (vcf) 
 
 **-output** path to the folder for the output files
+
 **-tree** path to the available phylogenetic tree {Y_minimal} [is mutually exclusive with -customtree] 
+
 **-customtree** path to custom phylogenetic tree
 
 
