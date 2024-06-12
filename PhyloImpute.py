@@ -146,12 +146,9 @@ if args.input_format == "vcf":
 
 
 if args.input_format == "csv":
-    print("csv")
     #import sample dataframe and variant order 
     df = pd.read_csv(args.input, sep="\t", index_col=1) #INPUT CHANGE
-    print(df)
     
-
 
 
 #WITH INPUT TABLE
@@ -219,7 +216,6 @@ for i, r in tree.iterrows():
             tree_snps.append(e)
 tree_snps = set(tree_snps)
 
-
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
 adding_snps = tree_snps - df_snps
@@ -242,7 +238,7 @@ def preprocess_set(s):
     return processed_set
 questionable_SNPs= [] #something is off with these variants position
 
-Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value"]
+Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value1\tPenalty_value2"]
 for col_name, col in df.items(): #iteritems()
     lengths_list = []
     filtered_D= df[col_name]=="D"
@@ -271,16 +267,21 @@ for col_name, col in df.items(): #iteritems()
     if len(overlapping_derived) == 0:
         Hg_sample = "No hg pred possible, because no informative derived alleles"
         Hg_support = "-"
-        Hg_penalty = "-"
+        Hg_penalty1 = "-"
+        Hg_penalty2 = "-"
     else:
         Hg_sample = hg_table[max_index]
         Hg_support = str(len(overlapping_derived))+"/"+str(len(max_d))
         #Penalty comprises of variants in the max_d_branch that are ancestral (but are expected to be derived)
         #But also of variants that are derived but not in the max_d_branch
         Hg_penalty_part1 = processed_set1.intersection(max_d)#How many are ancestral in our max res branch
+        Hg_penalty1 = str(len(Hg_penalty_part1))+"/"+str(len(max_d))#How many are ancestral
+        
         Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived
-        Hg_penalty = str(len(Hg_penalty_part1)+len(Hg_penalty_part2))+"/"+str(len(max_d))#How many are ancestral
-    Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty)) #col_name is the sample name
+        total_snps_tree = len(tree_snps)-2 #Remove title and ROOT
+        Hg_penalty2 = str(len(Hg_penalty_part2))+"/"+str(total_snps_tree) #divided by total number of variants
+        
+    Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)) #col_name is the sample name
 
     
     overlapping_entries=processed_set1.intersection(max_d)
