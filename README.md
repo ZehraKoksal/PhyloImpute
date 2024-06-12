@@ -42,7 +42,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 #### 3.1.1) CSV Input file
 The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
 
-<img src="/test_run/images/input_csv.png" alt="Input file style" width="700"/>
+<img src="/test_run/images/input_csv.png" alt="Input file style" width="350"/>
 
 The rows present variants, the columns individuals.
 The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
@@ -72,7 +72,7 @@ SNPs that cannot be separated ("equal") are divided by commas in the same branch
 #### 3.1.3.1) phyloimputed.csv
 The outcome are the observed (**D**,**A**,**X**) and imputed (**d**,**a**) allelic states for the initially reported SNPs complemented with the SNPs in the phylogenetic tree and a rooting SNP (ROOT). 
 
-<img src="/test_run/images/Output_partly.png" alt="Input file style" width="400"/>
+<img src="/test_run/images/Output_partly.png" alt="Input file style" width="350"/>
 
 #### 3.1.3.2) haplogroups.csv
 PhyloImpute cross-references the allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data. 
