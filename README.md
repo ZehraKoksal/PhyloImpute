@@ -19,6 +19,7 @@ PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phy
 
 PhyloImpute can be run with a pre-processed csv input file or vcf files:
 
+#
 #### 3.1) CSV file
 ```
 python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
@@ -37,7 +38,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 **-output** path to the existing folder for the output files
 
 
-#
+
 #### 3.1.1) CSV Input file
 The user is required to provide the path to the input file in the tab-separated _.csv_ format. 
 
@@ -113,9 +114,6 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 
 Alternatively the path to a folder containing all vcf files can be provided. 
 
-```
-python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9
-```
 #### 3.2.2) Phylogenetic tree
 #### 3.2.2.1) Pre-processed phylogenetic tree 
 Currently, a pre-processed phylogenetic tree is available for the human Y chromosome (Minimal Y tree):
@@ -140,6 +138,7 @@ SNPs that cannot be separated ("equal") are divided by commas in the same branch
 When using a custom tree, the user needs to provide information on the marker name, position, alleles in a dictionary file accessed with the parameter **-vcf_dic**
 
 It needs to follow the presented structure:
+
 <img src="/test_run/images/dictionary_file.png" alt="Input file style" width="350"/>
 
 With the column names "marker" for the marker names identical to the ones used in the custom tree, the "GRCh37" and/or "GRCh38" columns (depending on your vcf file), "Anc" and "Der" columns for the ancestral and derived alleles of the respective variants. And the "Hg" column with the haplogroups defined by the respective marker.
