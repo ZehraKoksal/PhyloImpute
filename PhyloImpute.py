@@ -179,9 +179,10 @@ if type(args.customtree) == str:
             if col_name==0:
                 tree_df.loc[:,col_name]  = col.fillna(marker) #replace all nan with the first marker non-nan
                 break #so we can skip to the next column
-            elif pd.isna(col.iloc[index+1]): #and index<len(tree)-2:#pd.isna(index+1,col):
+            elif pd.isna(col.iloc[index+1]): 
                 prev_upstream=tree_df.loc[index,col_name-1]
-                if tree_df.loc[index+1,col_name-1]==prev_upstream :
+                if tree_df.loc[index+1,col_name-1]==prev_upstream:
+                    warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
                     tree_df.loc[index+1,col_name]  = marker
                     if index==len(tree_df)-2:
                         break
