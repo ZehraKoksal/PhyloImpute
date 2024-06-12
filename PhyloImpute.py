@@ -167,41 +167,40 @@ if type(args.customtree) == str:
     tree_og = pd.read_csv(args.customtree, sep="\t", header=None)
     hgs = tree_og.iloc[1:,0]
     hgs_list = hgs.values.tolist()
-    tree = tree_og.iloc[:,1:]
-    tree.columns = range(len(tree.columns)) #reindex columns starting from 0
-    for col_name, col in tree.items():
+    tree_df = tree_og.iloc[:,1:]
+    tree_df.columns = range(len(tree_df.columns)) #reindex columns starting from 0
+    for col_name, col in tree_df.items():
         first_non_nan_index = col.first_valid_index() ##Get the index with the first non nan
         for index, value in col.iloc[first_non_nan_index:].items():#tree.iterrows():
-            if index==len(tree)-1:
+            if index==len(tree_df)-1:
                 break
             if pd.notna(index):
                 marker=value
             if col_name==0:
-                tree.loc[:,col_name]  = col.fillna(marker) #replace all nan with the first marker non-nan
+                tree_df.loc[:,col_name]  = col.fillna(marker) #replace all nan with the first marker non-nan
                 break #so we can skip to the next column
             elif pd.isna(col.iloc[index+1]): #and index<len(tree)-2:#pd.isna(index+1,col):
-                prev_upstream=tree.loc[index,col_name-1]
-                if tree.loc[index+1,col_name-1]==prev_upstream :
-                    tree.loc[index+1,col_name]  = marker
-                    if index==len(tree)-2:
+                prev_upstream=tree_df.loc[index,col_name-1]
+                if tree_df.loc[index+1,col_name-1]==prev_upstream :
+                    tree_df.loc[index+1,col_name]  = marker
+                    if index==len(tree_df)-2:
                         break
 
-    tree= tree.iloc[1:,:] #skip the row with only "ROOT" entry
-    tree.insert(loc=0, column="hgs", value=hgs_list)
-    custom_tree_path = current_dir + "/custom.csv"
-    tree.to_csv(custom_tree_path, index=False, sep='\t')
+    tree_df= tree_df.iloc[1:,:] #skip the row with only "ROOT" entry
+    tree_df.insert(loc=0, column="hgs", value=hgs_list)
+    custom_tree_path = current_dir + "/custom_tree.csv"
+    tree_df.to_csv(custom_tree_path, index=False, sep='\t')
     print("SNP database generated and saved!")
-
 
 if type(args.tree) == str:
     filename = args.tree + ".csv"
     tree_csv_path = os.path.join(current_dir,filename)
     tree_df = pd.read_csv(tree_csv_path, sep="\t")
     #filter out the hg column 
-    tree= tree_df.iloc[:,1:]
+tree= tree_df.iloc[:,1:]
     #now get the haplogroup column
-    hg_table = tree_df.iloc[:,0]
-    hg_table = hg_table.values.tolist()
+hg_table = tree_df.iloc[:,0]
+hg_table = hg_table.values.tolist()
 
 #turn rows into lists
 tree_lists=[row.dropna().tolist() for index, row in tree.iterrows()]
