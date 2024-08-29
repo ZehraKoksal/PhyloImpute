@@ -27,7 +27,7 @@ parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze,
 parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38','Anc'(=ancestral allele), 'Der'(=derived allele)")
 
 
-parser.add_argument("-tree", choices=["Y_minimal"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
+parser.add_argument("-tree", choices=["Y_minimal","NAMQY"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
 parser.add_argument("-customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
 
 args = parser.parse_args()
@@ -36,6 +36,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 #FOR VCF INPUT FILE
 
+print("PhyloImpute v1.0 is running...")
 def check_for_vcf_files(directory):
     vcf_files = glob.glob(os.path.join(directory, '*.vcf'))
     if vcf_files:
@@ -55,15 +56,25 @@ if args.input_format == "vcf":
         dic_Anc = dic["Anc"].values.tolist()
         dic_Der = dic["Der"].values.tolist()
         dic_marker = dic["marker"].values.tolist()
+    elif args.tree=="NAMQY":
+        dic= pd.read_csv("./NAMQY_dic.csv", sep="\t")
+        #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+        dic_pos = dic[args.vcf_ref].values.tolist()
+        dic_Anc = dic["Anc"].values.tolist()
+        dic_Der = dic["Der"].values.tolist()
+        dic_marker = dic["marker"].values.tolist()
     #If you are using a custom tree you need to also provide a custom dictionary and extract the information here
     elif type(args.customtree)==str:
         dic= pd.read_csv(args.vcf_dic, sep="\t")
         #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
         dic_Anc = dic["Anc"].values.tolist()
         dic_Der = dic["Der"].values.tolist()
         dic_marker = dic["marker"].values.tolist()
     #Make input table for Phyloimpute
+    #turn positions to strings, so they can be recognized later in the data tables
     input_table = pd.DataFrame({'pos':dic_pos, 'Sample':dic_marker})
     column_missing_data = len(input_table)*["X"]
 
@@ -96,6 +107,8 @@ def filter_vcf_file(file_path):
     ##Make list of variant positions in the same order
     vcf_pos_list = df["POS"].tolist()
     dic_vcf_pos = dic[dic[args.vcf_ref].isin(vcf_pos_list)]
+
+
     warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
     #now sort according to order in the list
     dic_vcf_pos.loc[:, 'sort_key']= pd.Categorical(dic_vcf_pos.loc[:, args.vcf_ref], categories=vcf_pos_list, ordered=True)
@@ -119,12 +132,11 @@ if args.input_format == "vcf":
     vcf_files = check_for_vcf_files(args.input)
     if type(args.vcf_ref)==str and type(args.vcf_chr)==str:
         print("\nNecessary input files are provided!\n")
-
-    
         #Now that checking is over, we loop through 
         for vcf_file in vcf_files:
             print(f'Processing file: {vcf_file}')
             derived_variant_pos=filter_vcf_file(vcf_file)
+            print(derived_variant_pos)
             sample_name = extract_sample_name(vcf_file)
             #Add sample column to input table with "X"s in it
             input_table[sample_name] = column_missing_data
@@ -139,7 +151,6 @@ if args.input_format == "vcf":
         df.set_index("Sample", inplace=True)
         #rename column pos
         df.rename(columns={'pos':0}, inplace=True)
-          
     else:
         print("\nOne or both of the input files vcf_ref or vcf_chr are missing! Please provide and rerun. See help function for more information. \n")
 
@@ -328,8 +339,6 @@ for col_name, col in df.items(): #iteritems()
     if len(A_list_markers) > 0:
         filtered_df = df[df.index.isin(A_list_markers)]
         unfiltered_df = df[~df.index.isin(A_list_markers)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
-        # print(filtered_df)
-        # print(unfiltered_df)
         filtered_df.loc[:,col_name]="a" #make the all derived (filling gaps step) #*for inference
         df=pd.concat([filtered_df,unfiltered_df])
 
