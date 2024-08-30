@@ -289,7 +289,10 @@ for col_name, col in df.items(): #iteritems()
         Hg_penalty1 = str(len(Hg_penalty_part1))+"/"+str(len(max_d))#How many are ancestral
         
         Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived
-        total_snps_tree = len(tree_snps)-2 #Remove title and ROOT
+        if "ROOT" in tree_snps:
+            total_snps_tree = len(tree_snps)-2 #Remove title and ROOT
+        else:
+            total_snps_tree = len(tree_snps)-1 #Remove title, No ROOT
         Hg_penalty2 = str(len(Hg_penalty_part2))+"/"+str(total_snps_tree) #divided by total number of variants
         
     Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)) #col_name is the sample name
