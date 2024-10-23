@@ -31,7 +31,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 
 **-input** path to the input file
 
-**-tree** path to the available phylogenetic tree {Y_minimal} [is mutually exclusive with -customtree] 
+**-tree** path to the available phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [is mutually exclusive with -customtree] 
 
 **-customtree** path to custom phylogenetic tree [is mutually exclusive with -tree] 
 
@@ -100,7 +100,7 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 
 **-output** path to the folder for the output files
 
-**-tree** path to the available phylogenetic tree {Y_minimal} [is mutually exclusive with -customtree] 
+**-tree** path to the available phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [is mutually exclusive with -customtree] 
 
 **-customtree** path to custom phylogenetic tree [is mutually exclusive with -tree] 
 
@@ -116,10 +116,11 @@ Alternatively the path to a folder containing all vcf files can be provided.
 
 #### 3.2.2) Phylogenetic tree
 #### 3.2.2.1) Pre-processed phylogenetic tree 
-Currently, twp pre-processed phylogenetic trees are available for the human Y chromosome: The general Minimal Y tree (doi:10.1002/humu.22468) and haplogroup specific NAMQY tree (https://doi.org/10.1155/2024/3046495 ; Unpublished):
+Currently, twp pre-processed phylogenetic trees are available for the human Y chromosome: The general Minimal Y tree (doi:10.1002/humu.22468), haplogroup Q specific NAMQY tree (https://doi.org/10.1155/2024/3046495 ; Unpublished), and the most recent tree from the International Society of Genetic Genealogy (ISOGG) (https://isogg.org/tree/):
 ```
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree NAMQY -vcf_ref GRCh37 -vcf_chr NC_000024.9
+python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree ISOGG_2020 -vcf_ref GRCh37 -vcf_chr NC_000024.9
 ```
 
 #### 3.2.2.2) Custom phylogenetic tree
