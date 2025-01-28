@@ -27,7 +27,7 @@ parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze,
 parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38','Anc'(=ancestral allele), 'Der'(=derived allele)")
 
 
-parser.add_argument("-tree", choices=["Y_minimal","NAMQY"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
+parser.add_argument("-tree", choices=["Y_minimal","NAMQY","ISOGG_2020"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
 parser.add_argument("-customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
 
 args = parser.parse_args()
@@ -36,7 +36,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 #FOR VCF INPUT FILE
 
-print("PhyloImpute v1.0 is running...")
+print("PhyloImpute v1.1 is running...")
 def check_for_vcf_files(directory):
     vcf_files = glob.glob(os.path.join(directory, '*.vcf'))
     if vcf_files:
@@ -58,6 +58,14 @@ if args.input_format == "vcf":
         dic_marker = dic["marker"].values.tolist()
     elif args.tree=="NAMQY":
         dic= pd.read_csv("./NAMQY_dic.csv", sep="\t")
+        #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+        dic_pos = dic[args.vcf_ref].values.tolist()
+        dic_Anc = dic["Anc"].values.tolist()
+        dic_Der = dic["Der"].values.tolist()
+        dic_marker = dic["marker"].values.tolist()
+    elif args.tree=="ISOGG_2020":
+        dic= pd.read_csv("./ISOGG_2020_dic.csv", sep="\t")
         #list of positions frm dictionary to filter from vcf file
         dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
@@ -136,7 +144,7 @@ if args.input_format == "vcf":
         for vcf_file in vcf_files:
             print(f'Processing file: {vcf_file}')
             derived_variant_pos=filter_vcf_file(vcf_file)
-            print(derived_variant_pos)
+            # print(derived_variant_pos)
             sample_name = extract_sample_name(vcf_file)
             #Add sample column to input table with "X"s in it
             input_table[sample_name] = column_missing_data
@@ -169,7 +177,6 @@ df = df.iloc[:,1:]
 #replace missing data with X and (*) with X
 df = df.fillna("X")
 df = df.replace(to_replace=r'\(.*\)', value='X',regex=True)
-
 
 #TREE to DATABASE
 if type(args.customtree) == str:
@@ -226,6 +233,7 @@ for i, r in tree.iterrows():
         else:
             tree_snps.append(e)
 tree_snps = set(tree_snps)
+tree_snps = {item for item in tree_snps if not (isinstance(item, float) and math.isnan(item))}
 
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
@@ -233,6 +241,7 @@ adding_snps = tree_snps - df_snps
 adding_snps = {x for x in adding_snps if x is not np.nan}
 adding_snps = {x for x in adding_snps if x != ""}
 
+df_exclusive_SNPs = df_snps - tree_snps
 #add the missing snps from the tree to the data
 df_adding_snps = pd.DataFrame(index=list(adding_snps), columns=df.columns, data="X")
 df = pd.concat([df,df_adding_snps])
@@ -288,7 +297,8 @@ for col_name, col in df.items(): #iteritems()
         Hg_penalty_part1 = processed_set1.intersection(max_d)#How many are ancestral in our max res branch
         Hg_penalty1 = str(len(Hg_penalty_part1))+"/"+str(len(max_d))#How many are ancestral
         
-        Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived
+        Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived #TO DO: exclude SNPs that are not in tree
+        Hg_penalty_part2 = Hg_penalty_part2 - df_exclusive_SNPs #remove SNPs that are derived in data, but not in tree
         if "ROOT" in tree_snps:
             total_snps_tree = len(tree_snps)-2 #Remove title and ROOT
         else:
@@ -327,12 +337,17 @@ for col_name, col in df.items(): #iteritems()
             #take all variants that are parallel to our sample based on the one column
             data_array=df_mismatch.values
             parallel_markers=data_array.flatten().tolist()
+            # print(parallel_markers)
             #remove nan
+            parallel_markers = {x for x in parallel_markers if pd.notnull(x)}
             parallel_markers = {x for x in parallel_markers if x is not np.nan}
+            # print(parallel_markers)
+            # print(ee)
             A_list.append(list(parallel_markers))
             #to set, to remove duplicate entries   
     A_list=set([item for sublist in A_list for item in sublist]) #flatten list in lists
     A_list = A_list - set(tree_lists[max_index]) #set(tree_lists[max_index]) are the derived snps
+    # print(A_list[:-6])
     A_list_markers=preprocess_set(A_list)
     #also remove the derived single (already processed snps) that are derived in the sample:
     A_list_markers = A_list_markers -set(sample_D_list)
