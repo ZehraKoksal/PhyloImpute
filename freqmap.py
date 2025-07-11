@@ -47,7 +47,8 @@ args = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-print(f"START GENERATING MAP FOR: {args.f_snp}")
+print()
+print(f"Start generating allele frequency map for: {args.f_snp}")
 #open color maps
 colors_df= pd.read_csv("color_maps.csv", sep="\t")
 color_str = colors_df.loc[colors_df['color'] == args.color, 'color_map'].values[0]
@@ -195,8 +196,11 @@ if args.derived_coordinates:
     
 
 if args.af_map == "svg":
-    plt.savefig('allele_frequency_plot_'+str(args.f_snp)+'.svg', format='svg',transparent=True)
+    plt.savefig(str(args.output)+'_allelefreq_map_'+str(args.f_snp)+'.svg', format='svg',transparent=True)
 elif args.af_map == "png":
-    plt.savefig('allele_frequency_plot_' + str(args.f_snp) + '.png', format='png', dpi=300, transparent=True)
+    plt.savefig(str(args.output)+'_allelefreq_map_' + str(args.f_snp) + '.png', format='png', dpi=300, transparent=True)
 elif args.af_map == "pdf":
-    plt.savefig('allele_frequency_plot_'+str(args.f_snp)+'.pdf', format='pdf',transparent=True)
+    plt.savefig(str(args.output)+'_allelefreq_map_'+str(args.f_snp)+'.pdf', format='pdf',transparent=True)
+
+print()
+print("Finished generating allele frequency map!")
