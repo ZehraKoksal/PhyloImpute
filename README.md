@@ -181,6 +181,7 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 
 ### Tune interpolator:
 PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by applying interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing epsilon. The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
+<img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
 
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' 'North America' -af_map png
