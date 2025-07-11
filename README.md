@@ -46,11 +46,11 @@ The user is required to provide the path to the input file in the tab-separated 
 <img src="/test_run/images/input_csv.png" alt="Input file style" width="350"/>
 
 The rows present variants, the columns individuals.
-The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.<br>
+The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
 &nbsp;<br>
 &nbsp;<br>
 #### 3.1.1.2) Phylogenetic tree
-The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. <br>
+The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. 
 &nbsp;<br>
 &nbsp;<br>
 #### 3.1.1.2.1) Pre-processed phylogenetic tree
