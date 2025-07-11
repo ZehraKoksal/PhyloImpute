@@ -163,7 +163,8 @@ Same as section 3.1.1.3
 
 ### 3.2) Allele frequency plots
 The output file of PhyloImpute (_phyloimputed.csv) can further be used to generate an allele frequency map of derived alleles of selected SNPs.
-<img src="/test_run/images/freqmap_allelefreq_map_SNPX_basic.png" alt="general_allele_frequency_map" width="550"/>
+<img src="/test_run/images/freqmap_allelefreq_map_SNPX_basic.png" alt="general_allele_frequency_map" width="1000"/>
+
 For this, the following code can be run:
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates_example.csv -continent 'South America' 'North America' -af_map png
