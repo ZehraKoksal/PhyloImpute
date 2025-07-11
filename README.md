@@ -184,7 +184,7 @@ PhyloImpute maximizes the available information on the allelic states of SNPs by
 <br><br>
 <img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
 
-I recommend illustrating datapoints with ancestral (black dots) and derived alleles (white dots) with the parameters **-ancestral_coordinates** and **-derived_coordinates**. Sometimes close-by datapoints can have extreme differences in allele frequencies (e.g., due to sampling strategy), which can cause artifacts in the RBF. The artifacts will be visible by seeing high (derived) allele frequencies of the SNP of interest in a region, where no derived alleles are (no white dots). In these cases, the user should reduce the smoothing factor (epsilon) incrementally (by defining **-smoothing [number]** until the artifact disappears.
+I recommend illustrating datapoints with ancestral (black dots) and derived alleles (white dots) with the parameters **-ancestral_coordinates** and **-derived_coordinates**. Sometimes close-by datapoints can have extreme differences in allele frequencies (e.g., due to sampling strategy), which can cause artifacts in the RBF. The artifacts are visible as high derived allele frequencies of the SNP in a region, where no derived alleles are (i.e., no white dots). In these cases, the user should reduce the smoothing factor (epsilon) incrementally (by defining **-smoothing [number]**) until the artifact disappears.
 
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' -af_map png -smoothing 2
