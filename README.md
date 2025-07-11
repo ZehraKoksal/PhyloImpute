@@ -208,5 +208,5 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNP1 -f_coordinates ./sample_coordinates.csv -color orange -country 'Ecuador' -af_map png
 ```
-<img src="/test_run/images/snp1_ecu.png" alt="country_specific_allele_frequency_map" width="1000"/>
+<img src="/test_run/images/snp1_ecu.png" alt="country_specific_allele_frequency_map" width="500"/>
 <br><br>
