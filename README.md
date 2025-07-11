@@ -20,7 +20,6 @@ PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phy
 
 PhyloImpute can be run with a pre-processed csv input file or vcf files:
 &nbsp;<br>
-&nbsp;<br>
 #
 #### 3.1.1) CSV file
 ```
@@ -95,7 +94,7 @@ The third value is the **penalty value 2** which counts the number of markers in
 #### 3.1.1.3.3) conflicting_SNPs.csv
 Markers causing either of the two penalty values are stored in the additional file **conflicting_SNPs.csv**: Markers causing **penalty value 1** and **penalty value 2** are stored with the comments "(ancestral allele inside main branch)" and "(derived allele inside parallel branch)", respectively. (In the main output file (phyloimputed.csv), PhyloImpute keeps the observed allelic states.)
 &nbsp;<br>
-&nbsp;<br>
+#
 #### 3.1.2) VCF file
 ```
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9
@@ -134,7 +133,6 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree ISOGG_2020 -vcf_ref GRCh37 -vcf_chr NC_000024.9
 ```
 &nbsp;<br>
-
 #### 3.1.2.2.2) Custom phylogenetic tree
 Alternatively, custom phylogenetic trees can be provided:
 ```
