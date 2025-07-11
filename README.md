@@ -176,7 +176,7 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 - **-country**: Specify one or several countries that should be plotted. Country names need to exactly match labelling provided in file **Countries_list.csv** (located in same folder as python scripts and ReadMe file). It is recommended to provide country names within single quotes, e.g. 'Ecuador' [Optional]
 - **-whole_world**: Specify if you want to instead show the whole world map [Optional]
 - **-af_map**: You can select output file format of the allele frequency map between svg, pdf and png. Default: svg [Optional]
-<img src="/test_run/images/freqmap_allelefreq_map_SNPX_basic.png" alt="general_allele_frequency_map" width="350"/>
+<img src="/test_run/images/freqmap_allelefreq_map_SNPX_basic.png" alt="general_allele_frequency_map" width="550"/>
 
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp M3 -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' 'North America' -af_map png
