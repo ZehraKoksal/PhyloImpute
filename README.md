@@ -14,7 +14,6 @@ cd PhyloImpute/
 python PhyloImpute.py -h
 ```
 &nbsp;<br>
-&nbsp;<br>
 ### 3) Algorithm and Commands
 ### 3.1) Imputation
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
