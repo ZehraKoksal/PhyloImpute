@@ -19,10 +19,10 @@ python PhyloImpute.py -h
 ### 3.1) Imputation
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
 
-PhyloImpute can be run with a pre-processed csv input file or vcf files:
+PhyloImpute can be run with a pre-processed csv input file or vcf files:<br>
 
 #
-<br>
+
 #### 3.1.1) CSV file
 ```
 python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
@@ -38,7 +38,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 
 **-customtree** path to custom phylogenetic tree [is mutually exclusive with -tree] 
 
-**-output** path to the existing folder for the output files
+**-output** path to the existing folder for the output files<br>
 
 
 
@@ -48,10 +48,10 @@ The user is required to provide the path to the input file in the tab-separated 
 <img src="/test_run/images/input_csv.png" alt="Input file style" width="350"/>
 
 The rows present variants, the columns individuals.
-The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.
+The header row should present the individuals' labels (blue) and the second column the variant names (orange). The table contains the oberseved allelic states (green) which can be ancestral **A**, derived **D**  or missing **X** for each variant.<br>
 
 #### 3.1.1.2) Phylogenetic tree
-The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. 
+The phylogenetic tree needs to contain at least one of the SNPs in the input file in the exact same nomenclature. <br>
 
 #### 3.1.1.2.1) Pre-processed phylogenetic tree
 Currently, a pre-processed phylogenetic tree is available for the human Y chromosome (Minimal Y tree):
