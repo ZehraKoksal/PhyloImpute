@@ -184,21 +184,7 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 
 
 
-
-
-
-
-- **-freqmap**: Define this to generate allele frequency maps _[Required]_
-- **-input**: specify path to PhyloImpute output file (_phyloimputed.csv) or any other file for your data that is in the same format (see image in 3.1.1.3.1) _[Required]_
-- **-output**: Define output file name _[Required]_
-- **-f_snp**: Define name of SNP for allele frequency map _[Required]_
-- **-f_coordinates**: Provide path to tab-separated csv file where you define coordinates of same samples from **-input** file. First column provides sample names, second column latitude (positive values for North, negative values for South) and third column longitude (positive values for East, negative values for West). For example file see **/test_run/sample_coordinates_example.csv** [Required]
-- **-continent**: Specify one or several of the six continents (Oceania,Africa,North America,Asia,South America,Europe) that should be plotted. Please provide continent names within single quotes, e.g. 'South America' [Optional]
-- **-country**: Specify one or several countries that should be plotted. Country names need to exactly match labelling provided in file **Countries_list.csv** (located in same folder as python scripts and ReadMe file). It is recommended to provide country names within single quotes, e.g. 'Ecuador' [Optional]
-- **-whole_world**: Specify if you want to instead show the whole world map [Optional]
-- **-af_map**: You can select output file format of the allele frequency map between svg, pdf and png. Default: svg [Optional]
-
-### Tune interpolator:
+### 3.2.1 Tune interpolator:
 PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing a parameter (epsilon). The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
 <br><br>
 <img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
@@ -209,7 +195,7 @@ I recommend illustrating datapoints with ancestral (black dots) and derived alle
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' -af_map png -smoothing 2
 ```
 
-### Additionally, some parameters can be changed to customize the maps:
+### 3.2.2 Additionally, some parameters can be changed to customize the maps:
 <img src="/test_run/images/PI_plot_contours.png" alt="general_allele_frequency_map" width="1000"/>
 
 - **-color**: The color palette can be changed by specifying one of these colors: blue,orange,pink,red,green,yellow,purple,violet,grey [Default:blue]
@@ -218,4 +204,9 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -continent 'South America' 'North America' -af_map png
 ```
+### 3.2.3 More examples:
+```bash
+python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNP1 -f_coordinates ./sample_coordinates.csv -color orange -country 'Ecuador' -af_map png
+```
+<img src="/test_run/images/snp1_ecu.png" alt="country_specific_allele_frequency_map" width="1000"/>
 <br><br>
