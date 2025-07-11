@@ -152,7 +152,7 @@ Required when using `-customtree`. Structure:
 
 Columns:
 - **marker**: names used in tree  
-- **GRCh37**, **GRCh38**: positions  
+- **GRCh37**, **GRCh38**, **T2T**: positions  
 - **Anc**, **Der**: alleles  
 - **Hg**: haplogroups  
 <br>
