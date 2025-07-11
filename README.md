@@ -180,11 +180,13 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 - **-af_map**: You can select output file format of the allele frequency map between svg, pdf and png. Default: svg [Optional]
 
 ### Tune interpolator:
-PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by applying interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing epsilon. The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
+PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing a parameter (epsilon). The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
 <img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
 
+I recommend illustrating datapoints with ancestral (black dots) and derived alleles (white dots) with the parameters **-ancestral_coordinates** and **-derived_coordinates**. Sometimes close-by datapoints can have extreme differences in allele frequencies (e.g., due to sampling strategy), which can cause artifacts in the RBF. The artifacts will be visible by seeing high (derived) allele frequencies of the SNP of interest in a region, where no derived alleles are (no white dots). In these cases, the user should reduce the smoothing factor (epsilon) incrementally (by defining **-smoothing [number]** until the artifact disappears.
+
 ```bash
-python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' 'North America' -af_map png
+python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' 'North America' -af_map png -smoothing 2
 ```
 
 ### Additionally, some parameters can be changed to customize the maps:
