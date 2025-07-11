@@ -169,6 +169,25 @@ For this, the following code can be run:
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates_example.csv -continent 'South America' 'North America' -af_map png
 ```
+
+| **Flag**             | **Description**                                                                                                                                                                                                                                     | **Required/Optional** |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|
+| `-freqmap`           | Define this to generate allele frequency maps.                                                                                                                                                                                                     | Required               |
+| `-input`             | Specify path to PhyloImpute output file (`_phyloimputed.csv`) or any file in the same format (see image in 3.1.1.3.1).                                                                                                                             | Required               |
+| `-output`            | Define output file name.                                                                                                                                                                                                                            | Required               |
+| `-f_snp`             | Define name of SNP for allele frequency map.                                                                                                                                                                                                       | Required               |
+| `-f_coordinates`     | Provide path to tab-separated CSV file defining coordinates of samples from the `-input` file. Format: 1st column = sample names, 2nd = latitude, 3rd = longitude. Example: `/test_run/sample_coordinates_example.csv`.                             | Required               |
+| `-continent`         | Specify one or several continents to plot: `Oceania`, `Africa`, `North America`, `Asia`, `South America`, `Europe`. Use single quotes, e.g., `'South America'`.                                                                                   | Optional               |
+| `-country`           | Specify one or more countries to plot. Names must match **Countries_list.csv**. Use single quotes, e.g., `'Ecuador'`.                                                                                                                              | Optional               |
+| `-whole_world`       | Plot the entire world map instead of specific regions.                                                                                                                                                                                             | Optional               |
+| `-af_map`            | Select output file format for the allele frequency map: `svg`, `pdf`, or `png`. Default is `svg`.                                                                                                                                                  | Optional               |
+
+
+
+
+
+
+
 - **-freqmap**: Define this to generate allele frequency maps _[Required]_
 - **-input**: specify path to PhyloImpute output file (_phyloimputed.csv) or any other file for your data that is in the same format (see image in 3.1.1.3.1) _[Required]_
 - **-output**: Define output file name _[Required]_
