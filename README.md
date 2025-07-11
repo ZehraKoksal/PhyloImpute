@@ -35,7 +35,16 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 - **-input** path to the input file  
 - **-tree** path to the available phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [mutually exclusive with -customtree]  
 - **-customtree** path to custom phylogenetic tree [mutually exclusive with -tree]  
-- **-output** path to the existing folder for the output files  
+- **-output** path to the existing folder for the output files
+
+| **Flag**         | **Description**                                                                                             | **Required/Optional**             |
+|------------------|-------------------------------------------------------------------------------------------------------------|-----------------------------------|
+| `-input_format`  | Input file format (e.g., `csv`).                                                                             | Required                          |
+| `-input`         | Path to the input file.                                                                                      | Required                          |
+| `-tree`          | Path to the available phylogenetic tree. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                       | Optional* (mutually exclusive with customtree)        |
+| `-customtree`    | Path to a custom phylogenetic tree.                                                                          | Optional* (mutually exclusive with tree)    |
+| `-output`        | Path to an existing folder where output files will be saved.                                                 | Required                          |
+
 <br>
 
 #### 3.1.1.1) CSV Input file
