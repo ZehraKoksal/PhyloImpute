@@ -179,6 +179,10 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 - **-af_map**: You can select output file format of the allele frequency map between svg, pdf and png. Default: svg [Optional]
 
 
+Additionally, some parameters can be changed to customize the maps:
+- **-color**: The color palette can be changed by specifying one of these colors: blue,orange,pink,red,green,yellow,purple,violet,grey [Default:blue]
+- **-contour**: Adjust the number of different shades for the allele frequencies [Default:15]
+
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' 'North America' -af_map png
 ```
