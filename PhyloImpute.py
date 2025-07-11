@@ -13,30 +13,81 @@ import warnings
 #User input paths
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-input_format", required=True,choices=["vcf","csv"],help="Option 'vcf' is used when the available input format are .vcf or vcf.gz files. The vcf files need to be quality filtered already! The 'csv' option is used for tab-delimited csv file of a dataframe with individuals as columns and variants as rows. "
+parser.add_argument("-input_format", choices=["vcf","csv"],help="Option 'vcf' is used when the available input format are .vcf or vcf.gz files. The vcf files need to be quality filtered already! The 'csv' option is used for tab-delimited csv file of a dataframe with individuals as columns and variants as rows. "
   "Insert variant data as 'A' for ancestral, 'D' for derived allele, and 'X' for missing data. Add variant names as first column and sequence name as header row. "
   "For both options: Refrain from using comma separated marker or sequence names.")
 
-parser.add_argument("-input", required=True, help="For 'vcf' give the folder to the vcf files. For 'csv', give the path to one csv file.")
+parser.add_argument("-input", required=True, help="For 'vcf' give the folder to the vcf files. For 'csv', give the path to one csv file. If -freqmap is specified, this needs to specify phyloimputed (or external) tab-separated csv file for allele frequency map.")
 parser.add_argument("-output", required=True, help="Path to output folder.")
-
-
-parser.add_argument("-vcf_ref", choices=["GRCh37","GRCh38"],help="When using the 'vcf' option, give the version of the reference genome used for the alignment: GRCh37 or GRCh38") 
+parser.add_argument("-vcf_ref", choices=["GRCh37","GRCh38","T2T"],help="When using the 'vcf' option, give the version of the reference genome used for the alignment: GRCh37, GRCh38, or T2T") 
 parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze, named in your vcf file? This depends on the reference genome used and can be e.g. 'Y','chrY', 'NC_000024.9' for the human Y chromosome.")
-
-parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38','Anc'(=ancestral allele), 'Der'(=derived allele)")
-
-
+parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38' and/or 'T2T','Anc'(=ancestral allele), 'Der'(=derived allele)")
 parser.add_argument("-tree", choices=["Y_minimal","NAMQY","ISOGG_2020"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
 parser.add_argument("-customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
+
+parser.add_argument('-freqmap', action='store_true', help='Generate allele frequency map for specified SNP.')
+parser.add_argument("-f_snp", help="Define SNP name to generate allele frequency maps.")
+parser.add_argument("-f_coordinates", help="Provide path to csv file with sample names in first column (case-sensitive to input file) and coordinates in second column.")
+parser.add_argument("-color", default="blue", choices=["blue","orange","pink","red","green","yellow","purple","violet","grey"],help="Select color [default:blue]") 
+parser.add_argument("-contour", default="15", type=str, help="Define resolution of allele frequencies. Default: 15")
+parser.add_argument("-smoothing", default="2.3", type=str, help="Define interpolated missing data points between sampling coordinates. The higher the value, the more extreme the smoothing. Default: 2.3")
+parser.add_argument("-ancestral_coordinates", action="store_true",help="Specify if marking coordinates with ancestral alleles of SNP in black circles.")
+parser.add_argument("-derived_coordinates", action="store_true",help="Specify if marking coordinates with ancestral alleles of SNP in white circles.")
+parser.add_argument("-whole_world", action="store_true",help="Specify if visualizing map of whole world.")
+parser.add_argument("-continent",choices=["Oceania","Africa","North America","Asia","South America","Europe"],nargs='+',help="Select one or more continents that you want to present. Add ' around each continent entry, e.g. 'South America'")
+parser.add_argument("-country",nargs='+',help="Select one or more countries that you want to present. Nomenclature must align with the countries' nomenclature in file 'Countries_list.csv'.")
+parser.add_argument("-af_map", default="svg", choices=["pdf","png","svg"],help="Specify output format of allele frequency map. Default: svg")
+
 
 args = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-#FOR VCF INPUT FILE
+#GENERATE ALLELE FREQUENCY MAP
 
-print("PhyloImpute v1.1 is running...")
+
+if args.freqmap:
+    # if type(args.color) != str: #default
+        # args.color = "blue"
+    if not type(args.f_coordinates) == str:
+        print("Please define sample names with corresponding coordinates using -f_coordinates. Provide path to csv file with sample names in first column (case-sensitive to input file) and coordinates in second column.")
+        sys.exit()
+    if not type(args.f_snp) == str:
+        print("Please define SNP name to generate allele frequency map using -f_snp. Make sure to use the exact naming (case-sensitive) as in the input file.")
+        sys.exit()
+    cmd= ['python', 'freqmap.py',
+            '-input', args.input,
+            '-output', args.output,
+            '-f_snp', args.f_snp,
+            '-f_coordinates', args.f_coordinates,
+            '-color', args.color,
+            '-contour', args.contour,
+            '-smoothing', args.smoothing,
+            '-af_map', args.af_map
+    ]
+    if args.ancestral_coordinates:
+        cmd.append('-ancestral_coordinates')    
+    if args.derived_coordinates:
+        cmd.append('-derived_coordinates')  
+    if args.whole_world:
+        cmd.append('-whole_world')  
+    elif args.continent:
+        cmd.extend(['-continent'] + args.continent) 
+    elif args.country:
+        # cmd.append('-country', args.country)  
+        cmd.extend(['-country'] + args.country) 
+    # print(cmd)
+    subprocess.run(cmd)    
+
+    sys.exit()
+
+
+if not args.input_format:
+    print("Please define '-input_format' to run PhyloImpute.")
+    sys.exit()
+    
+#FOR VCF INPUT FILE
+print("PhyloImpute v1.2 is running...")
 def check_for_vcf_files(directory):
     vcf_files = glob.glob(os.path.join(directory, '*.vcf'))
     if vcf_files:
@@ -52,6 +103,8 @@ if args.input_format == "vcf":
     if args.tree=="Y_minimal":
         dic= pd.read_csv("./Y_minimal_dic.csv", sep="\t")
         #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
         dic_Anc = dic["Anc"].values.tolist()
         dic_Der = dic["Der"].values.tolist()
@@ -59,14 +112,17 @@ if args.input_format == "vcf":
     elif args.tree=="NAMQY":
         dic= pd.read_csv("./NAMQY_dic.csv", sep="\t")
         #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
         dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
         dic_Anc = dic["Anc"].values.tolist()
         dic_Der = dic["Der"].values.tolist()
         dic_marker = dic["marker"].values.tolist()
     elif args.tree=="ISOGG_2020":
+        print("isogg")
         dic= pd.read_csv("./ISOGG_2020_dic.csv", sep="\t")
         #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
         dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
         dic_Anc = dic["Anc"].values.tolist()
@@ -76,6 +132,7 @@ if args.input_format == "vcf":
     elif type(args.customtree)==str:
         dic= pd.read_csv(args.vcf_dic, sep="\t")
         #list of positions frm dictionary to filter from vcf file
+        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
         dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
         dic_pos = dic[args.vcf_ref].values.tolist()
         dic_Anc = dic["Anc"].values.tolist()
