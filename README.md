@@ -166,7 +166,7 @@ The output file of PhyloImpute (_phyloimputed.csv) can further be used to genera
 <img src="/test_run/images/freqmap_allelefreq_map_SNPX_basic.png" alt="general_allele_frequency_map" width="550"/>
 For this, the following code can be run:
 ```bash
-python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp M3 -f_coordinates ./sample_coordinates_example.csv -continent 'South America' 'North America' -af_map png
+python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates_example.csv -continent 'South America' 'North America' -af_map png
 ```
 - **-freqmap**: Define this to generate allele frequency maps [Required]
 - **-input**: specify path to PhyloImpute output file (_phyloimputed.csv) or any other file for your data that is in the same format (see image in 3.1.1.3.1) [Required]
