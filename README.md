@@ -31,11 +31,6 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 
 **Parameters:**
 
-- **-input_format** csv  
-- **-input** path to the input file  
-- **-tree** path to the available phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [mutually exclusive with -customtree]  
-- **-customtree** path to custom phylogenetic tree [mutually exclusive with -tree]  
-- **-output** path to the existing folder for the output files
 
 | **Flag**         | **Description**                                                                                             | **Required/Optional**             |
 |------------------|-------------------------------------------------------------------------------------------------------------|-----------------------------------|
@@ -114,14 +109,17 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 
 **Parameters:**
 
-- **-input_format** vcf  
-- **-input** path to the folder with VCF files  
-- **-output** output folder path  
-- **-tree** phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [exclusive with -customtree]  
-- **-customtree** path to custom phylogenetic tree [exclusive with -tree]  
-- **-vcf_ref** reference genome used {GRCh37, GRCh38, T2T}  
-- **-vcf_chr** chromosome ID in VCF (e.g., NC_000024.9 for GRCh37)  
-- **-vcf_dic** dictionary file for custom tree markers (used with -customtree)  
+| **Flag**         | **Description**                                                                                                   | **Required/Optional**             |
+|------------------|-------------------------------------------------------------------------------------------------------------------|-----------------------------------|
+| `-input_format`  | Input file format (`vcf`).                                                                                        | Required                          |
+| `-input`         | Path to the folder containing VCF files.                                                                          | Required                          |
+| `-output`        | Output folder path where results will be saved.                                                                   | Required                          |
+| `-tree`          | Phylogenetic tree to use. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                                            | Optional* (mutually exclusive with customtree)    |
+| `-customtree`    | Path to a custom phylogenetic tree.                                                                               | Optional* (mutually exclusive with tree)    |
+| `-vcf_ref`       | Reference genome used for VCF files. Options: `GRCh37`, `GRCh38`, `T2T`.                                          | Required                          |
+| `-vcf_chr`       | Chromosome ID in the VCF file (e.g., `NC_000024.9` for GRCh37).                                                   | Required                          |
+| `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                              | Optional (used with `-customtree`)|
+
 <br>
 
 #### 3.1.2.1) VCF Input file
