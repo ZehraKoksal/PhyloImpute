@@ -180,6 +180,8 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 
 
 Additionally, some parameters can be changed to customize the maps:
+<img src="/test_run/images/PI_plot_contours.png" alt="general_allele_frequency_map" width="700"/>
+
 - **-color**: The color palette can be changed by specifying one of these colors: blue,orange,pink,red,green,yellow,purple,violet,grey [Default:blue]
 - **-contour**: Adjust the number of different shades for the allele frequencies [Default:15]
 
