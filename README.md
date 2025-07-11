@@ -14,14 +14,15 @@ cd PhyloImpute/
 python PhyloImpute.py -h
 ```
 <br><br>
-### 3) Algorithm and Commands
-<br><br>
+### 3) Algorithm and Commands<br>
+
 ### 3.1) Imputation
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
 
 PhyloImpute can be run with a pre-processed csv input file or vcf files:
 
 #
+<br>
 #### 3.1.1) CSV file
 ```
 python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output ./output -tree Y_minimal
