@@ -13,7 +13,8 @@ git clone https://github.com/ZehraKoksal/PhyloImpute.git
 cd PhyloImpute/
 python PhyloImpute.py -h
 ```
-<br><br>
+&nbsp;<br>
+&nbsp;<br>
 ### 3) Algorithm and Commands
 ### 3.1) Imputation
 PhyloImpute imputes missing data by assuming that the SNPs in a clade of the phylogenetic tree leading up to a SNP with a derived allele are derived as well. SNPs on parallel branches are expected to be ancestral.
@@ -78,8 +79,10 @@ SNPs that cannot be separated ("equal") are divided by commas in the same branch
 The outcome are the observed (**D**,**A**,**X**) and imputed (**d**,**a**) allelic states for the initially reported SNPs complemented with the SNPs in the phylogenetic tree and a rooting SNP (ROOT). 
 
 <img src="/test_run/images/Output_partly.png" alt="Input file style" width="350"/>
+
 &nbsp;<br>
 &nbsp;<br>
+
 #### 3.1.1.3.2) haplogroups.csv
 PhyloImpute cross-references the allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data. 
 
@@ -94,7 +97,6 @@ The third value is the **penalty value 2** which counts the number of markers in
 Markers causing either of the two penalty values are stored in the additional file **conflicting_SNPs.csv**: Markers causing **penalty value 1** and **penalty value 2** are stored with the comments "(ancestral allele inside main branch)" and "(derived allele inside parallel branch)", respectively. (In the main output file (phyloimputed.csv), PhyloImpute keeps the observed allelic states.)
 &nbsp;<br>
 &nbsp;<br>
-#
 #### 3.1.2) VCF file
 ```
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree Y_minimal -vcf_ref GRCh37 -vcf_chr NC_000024.9
@@ -122,7 +124,9 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 Alternatively the path to a folder containing all vcf files can be provided. 
 &nbsp;<br>
 &nbsp;<br>
+
 #### 3.1.2.2) Phylogenetic tree
+
 #### 3.1.2.2.1) Pre-processed phylogenetic tree 
 Currently, twp pre-processed phylogenetic trees are available for the human Y chromosome: The general Minimal Y tree (doi:10.1002/humu.22468), haplogroup Q specific NAMQY tree (https://doi.org/10.1155/2024/3046495 ; Unpublished), and the most recent tree from the International Society of Genetic Genealogy (ISOGG) (https://isogg.org/tree/):
 ```
@@ -131,7 +135,7 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -tree ISOGG_2020 -vcf_ref GRCh37 -vcf_chr NC_000024.9
 ```
 &nbsp;<br>
-&nbsp;<br>
+
 #### 3.1.2.2.2) Custom phylogenetic tree
 Alternatively, custom phylogenetic trees can be provided:
 ```
@@ -146,7 +150,7 @@ The custom phylogenetic tree need to be made available by the user in the tab-se
 SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue).
 &nbsp;<br>
 &nbsp;<br>
-##### 3.1.2.2.1) custom tree marker dictionary 
+#### 3.1.2.2.3) custom tree marker dictionary 
 When using a custom tree, the user needs to provide information on the marker name, position, alleles in a dictionary file accessed with the parameter **-vcf_dic**
 
 It needs to follow the presented structure:
