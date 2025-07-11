@@ -178,7 +178,7 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 - **-country**: Specify one or several countries that should be plotted. Country names need to exactly match labelling provided in file **Countries_list.csv** (located in same folder as python scripts and ReadMe file). It is recommended to provide country names within single quotes, e.g. 'Ecuador' [Optional]
 - **-whole_world**: Specify if you want to instead show the whole world map [Optional]
 - **-af_map**: You can select output file format of the allele frequency map between svg, pdf and png. Default: svg [Optional]
-
+<br>
 ### Tune interpolator:
 PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing a parameter (epsilon). The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
 <img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
