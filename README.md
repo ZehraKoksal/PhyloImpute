@@ -191,7 +191,7 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 
 
 
-#### 3.2.1 Tune interpolator
+#### 3.2.1) Tune interpolator
 PhyloImpute maximizes the available information on the allelic states of SNPs by first imputing missing alleles (see above) and then by interpolating the remaining information between sample points using a radial basis function (RBF). This interpolation can be tuned by changing a parameter (epsilon). The default value of epsilon is 2.3, and the higher this value the stronger the "smoothing" of the data.
 <br><br>
 <img src="/test_run/images/PI_smoothing.png" alt="general_allele_frequency_map" width="1000"/>
@@ -202,7 +202,7 @@ I recommend illustrating datapoints with ancestral (black dots) and derived alle
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -derived_coordinates -ancestral_coordinates -continent 'South America' -af_map png -smoothing 2
 ```
 
-#### 3.2.2 Additionally, some parameters can be changed to customize the maps
+#### 3.2.2) Additionally, some parameters can be changed to customize the maps
 <img src="/test_run/images/PI_plot_contours.png" alt="general_allele_frequency_map" width="1000"/>
 
 - **-color**: The color palette can be changed by specifying one of these colors: blue,orange,pink,red,green,yellow,purple,violet,grey [Default:blue]
@@ -211,9 +211,13 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates.csv -color pink -continent 'South America' 'North America' -af_map png
 ```
-#### 3.2.3 More examples
+#### 3.2.3) More examples
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNP1 -f_coordinates ./sample_coordinates.csv -color orange -country 'Ecuador' -af_map png
 ```
 <img src="/test_run/images/snp1_ecu.png" alt="country_specific_allele_frequency_map" width="500"/>
+<br><br>
+### 4) Graphical user interface
+A graphical user interface of PhyloImpute v1.1 is available for windows: 
+Access the link and follow the instructions: https://zenodo.org/records/15864850
 <br><br>
