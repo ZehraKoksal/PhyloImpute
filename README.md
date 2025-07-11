@@ -81,19 +81,21 @@ This file contains observed (**D**, **A**, **X**) and imputed (**d**, **a**) all
 <br>
 
 ##### 3.1.1.3.2) haplogroups.csv
-PhyloImpute compares allelic states with the phylogenetic tree to verify accuracy and predict the haplogroup.
+PhyloImpute compares allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data.
 
 It outputs:
-- Predicted haplogroup  
-- **Confidence value**: proportion of derived alleles in main tree branch  
-- **Penalty value 1**: proportion of ancestral alleles in main branch  
-- **Penalty value 2**: proportion of derived alleles in parallel branches  
+- Predicted haplogroup: based on tree branch with the most SNPs that are present in the analyzed sequence ("main tree branch")
+- **Confidence value**: proportion of derived alleles in main tree branch. Low value can be due to low sequence coverage.  
+- **Penalty value 1**: proportion of ancestral alleles in main branch. The observed ancestral alleles could be the consequence of backmutations, but a high penalty value could hint towards an incorrect haplogroup prediction.  
+- **Penalty value 2**: proportion of derived alleles in parallel branches. Markers in parallel branches in the derived allelic state could be the consequence of recurrent mutations that are identical by state, rather than by descent. However, a high penalty value 2 could indicate that the sequencing data comprises a mixture of DNA from different individuals.    
 <br>
 
 ##### 3.1.1.3.3) conflicting_SNPs.csv
 Contains SNPs that cause penalty values:
 - "(ancestral allele inside main branch)" → penalty value 1  
-- "(derived allele inside parallel branch)" → penalty value 2  
+- "(derived allele inside parallel branch)" → penalty value 2
+
+In the main output file (phyloimputed.csv), PhyloImpute keeps the observed allelic states.
 <br>
 
 #### 3.1.2) VCF file
@@ -108,7 +110,7 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 - **-output** output folder path  
 - **-tree** phylogenetic tree {Y_minimal, NAMQY, ISOGG_2020} [exclusive with -customtree]  
 - **-customtree** path to custom phylogenetic tree [exclusive with -tree]  
-- **-vcf_ref** reference genome used {GRCh37, GRCh38}  
+- **-vcf_ref** reference genome used {GRCh37, GRCh38, T2T}  
 - **-vcf_chr** chromosome ID in VCF (e.g., NC_000024.9 for GRCh37)  
 - **-vcf_dic** dictionary file for custom tree markers (used with -customtree)  
 <br>
@@ -136,8 +138,11 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./output -vcf_ref GRCh37 -vcf_chr NC_000024.9 -customtree ./test_run/minimal_y_tree_hgs_custom_example.csv -vcf_dic ./Y_minimal_dic.csv
 ```
 
-Structure of the tree:
+Structure of the tree in tab-separated .csv file:
 <img src="/test_run/images/Custom_tree_hg.png" alt="Tree file format" width="700"/>  
+
+SNPs that cannot be separated ("equal") are divided by commas in the same branch (green). SNPs of downstream branches are presented in the row below with one additional indentation using a tab (orange). And SNPs from parallel branches are on separate, mutually exclusive branches (blue). 
+One example can be viewed in the test_run folder provided here. 
 <br>
 
 ##### 3.1.2.2.3) Custom tree marker dictionary
