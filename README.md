@@ -169,10 +169,10 @@ For this, the following code can be run:
 ```bash
 python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp SNPX -f_coordinates ./sample_coordinates_example.csv -continent 'South America' 'North America' -af_map png
 ```
-- **-freqmap**: Define this to generate allele frequency maps [Required]
-- **-input**: specify path to PhyloImpute output file (_phyloimputed.csv) or any other file for your data that is in the same format (see image in 3.1.1.3.1) [Required]
-- **-output**: Define output file name [Required]
-- **-f_snp**: Define name of SNP for allele frequency map [Required]
+- **-freqmap**: Define this to generate allele frequency maps _[Required]_
+- **-input**: specify path to PhyloImpute output file (_phyloimputed.csv) or any other file for your data that is in the same format (see image in 3.1.1.3.1) _[Required]_
+- **-output**: Define output file name _[Required]_
+- **-f_snp**: Define name of SNP for allele frequency map _[Required]_
 - **-f_coordinates**: Provide path to tab-separated csv file where you define coordinates of same samples from **-input** file. First column provides sample names, second column latitude (positive values for North, negative values for South) and third column longitude (positive values for East, negative values for West). For example file see **/test_run/sample_coordinates_example.csv** [Required]
 - **-continent**: Specify one or several of the six continents (Oceania,Africa,North America,Asia,South America,Europe) that should be plotted. Please provide continent names within single quotes, e.g. 'South America' [Optional]
 - **-country**: Specify one or several countries that should be plotted. Country names need to exactly match labelling provided in file **Countries_list.csv** (located in same folder as python scripts and ReadMe file). It is recommended to provide country names within single quotes, e.g. 'Ecuador' [Optional]
