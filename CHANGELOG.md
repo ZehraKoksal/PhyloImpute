@@ -8,6 +8,7 @@ All notable changes to this project will be documented here.
 - Generate allele frequency maps
 ### Fixed
 - Bug fix for ISOGG 2020 tree, when using vcf file. The database contains ancestral/derived allele switch-ups that leads to wrong haplogroup predictions for haplogroups afar from reference haplogroup R, e.g., A and B. 90 switch up positions were found and changed (see "switched_alleles_isogg.csv"
+- Functioning for vcf files that contain non-polymorphic variants, i.e. alleles corresponding to reference allele.
 ---
 
 ## [v1.1] – 2024-10-23
