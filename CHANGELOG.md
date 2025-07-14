@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented here.
 
-## [v1.2] – 2025-07-11
+## [v1.2] – 2025-07-15
 ### Added
 - Functionality for reference genome T2T-aligned data
 - Generate allele frequency maps
