@@ -184,9 +184,21 @@ def filter_vcf_file(file_path):
     #and remove index of filtered vcf
     df.reset_index(drop=True, inplace=True)
     #add derived alleles from dic per marker
-    df["der_from_dic_for_pos"] = sorted_dic_vcf_pos["Der"]
-    #compare two columns in a dataframe, if they dont match, remove the row
-    df_filtered = df[df['ALT'] == df['der_from_dic_for_pos']]
+    sorted_dic_vcf_pos_2 = pd.DataFrame()
+    sorted_dic_vcf_pos_2[["POS","der_from_dic_for_pos"]] = sorted_dic_vcf_pos[[args.vcf_ref,"Der"]]
+
+    df = pd.merge(df,sorted_dic_vcf_pos_2, on="POS", how="left")
+    # for vcfs that also contain non polymorphic sites: if alt allele matches derived allele AND genotype column (this is index -2, because we inserted another column at the end) starts with 1. 
+    df_filtered_1 = df[
+    (df['ALT'] == df['der_from_dic_for_pos']) &
+    (df.iloc[:, -2].astype(str).str.startswith("1"))]
+
+    df_filtered_2 = df[
+    (df['REF'] == df['der_from_dic_for_pos']) &
+    (df.iloc[:, -2].astype(str).str.startswith("0"))]
+    df_filtered = pd.concat([df_filtered_1, df_filtered_2], ignore_index=True)  
+    # df_filtered = df[df['ALT'] == df['der_from_dic_for_pos']]
+
     #Make list of the position column
     df_filtered_list = df_filtered["POS"].values.tolist()
     return df_filtered_list
