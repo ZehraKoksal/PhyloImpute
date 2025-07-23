@@ -280,7 +280,11 @@ if type(args.customtree) == str:
     tree_df.to_csv(custom_tree_path, index=False, sep='\t')
     print("SNP database generated and saved!")
 
-if type(args.tree) == str:
+if args.tree == "ISOGG_2020":
+    filename = args.tree + ".csv.gz"
+    tree_csv_path = os.path.join(current_dir,filename)
+    tree_df = pd.read_csv(tree_csv_path, sep="\t", compression='infer')
+elif type(args.tree) == str:
     filename = args.tree + ".csv"
     tree_csv_path = os.path.join(current_dir,filename)
     tree_df = pd.read_csv(tree_csv_path, sep="\t")
