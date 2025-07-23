@@ -297,6 +297,7 @@ hg_table = hg_table.values.tolist()
 #turn rows into lists
 tree_lists=[row.dropna().tolist() for index, row in tree.iterrows()]
 
+
 #get all snps in the whole tree
 tree_snps = []
 for i, r in tree.iterrows():
@@ -305,19 +306,32 @@ for i, r in tree.iterrows():
             tree_snps.extend(e.strip() for e in str(e).split(',') if e.strip())
         else:
             tree_snps.append(e)
-tree_snps = set(tree_snps)
+tree_snps = set(tree_snps) 
+
+
 tree_snps = {item for item in tree_snps if not (isinstance(item, float) and math.isnan(item))}
+
+
 
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
 adding_snps = tree_snps - df_snps
+
+
 adding_snps = {x for x in adding_snps if x is not np.nan}
 adding_snps = {x for x in adding_snps if x != ""}
-
 df_exclusive_SNPs = df_snps - tree_snps
+
 #add the missing snps from the tree to the data
 df_adding_snps = pd.DataFrame(index=list(adding_snps), columns=df.columns, data="X")
 df = pd.concat([df,df_adding_snps])
+
+
+# Temporarily move index to a column to remove duplicate entries of the same marker
+df = df.reset_index().drop_duplicates()
+df = df.set_index("index")
+df.index.name = None
+
 
 #B) START REPLACING SAMPLE DATAFRAME
 def preprocess_set(s):
