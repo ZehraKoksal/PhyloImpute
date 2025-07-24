@@ -307,11 +307,7 @@ for i, r in tree.iterrows():
         else:
             tree_snps.append(e)
 tree_snps = set(tree_snps) 
-
-
 tree_snps = {item for item in tree_snps if not (isinstance(item, float) and math.isnan(item))}
-
-
 
 # Add all snp names that are not in the sample df, as rows filled with X's
 df_snps = set(df.index.tolist())
@@ -351,6 +347,7 @@ for col_name, col in df.items(): #iteritems()
     filtered_D= df[col_name]=="D"
     sample_D_list = df[filtered_D].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
     filtered_A= df[col_name]=="A"
+
     sample_A_list = df[filtered_A].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
     sample_A_set=set(sample_A_list)
     #Compare each sample's derived lists with the database lists
@@ -364,7 +361,7 @@ for col_name, col in df.items(): #iteritems()
        
     #get the database row that will be used to replace missing data
     #are any of these items overlapping with ancestral observations in the sample?
-    new_D_db =set(tree_lists[max_index])
+    new_D_db =set(tree_lists[max_index])  # matches = {item for item in new_D_db if "F313" in item}
     processed_set1=preprocess_set(sample_A_list)
     max_d=preprocess_set(tree_lists[max_index])
     
@@ -408,12 +405,15 @@ for col_name, col in df.items(): #iteritems()
     #A)get the SNPs from the database row, but exclude those that were ancestral in the sample
     to_replace_derived = max_d.difference(processed_set1)
     new_D_db = max_d-processed_set1-processed_D_list #the snps in the database row excluding the ancestral and derived variants from the current sample
+    
     if len(new_D_db) > 0:
         filtered_df = df[df.index.isin(new_D_db)]
         unfiltered_df = df[~df.index.isin(new_D_db)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
         filtered_df.loc[:,col_name]="d" #make the all derived (filling gaps step) #*for inference
         df=pd.concat([filtered_df,unfiltered_df])
-
+    
+    
+    
     #B)turn X to A
     A_list = []
     for i in range(len(tree_lists[max_index])):
@@ -440,6 +440,8 @@ for col_name, col in df.items(): #iteritems()
     A_list_markers = A_list_markers -set(sample_D_list)
     #now remove the ones that are already known to be ancestral
     A_list_markers=A_list_markers-sample_A_set
+    #for recurrent snps: remove the ones that are imputed to be derived
+    A_list_markers=A_list_markers-max_d
 
     if len(A_list_markers) > 0:
         filtered_df = df[df.index.isin(A_list_markers)]
