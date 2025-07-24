@@ -6,6 +6,7 @@ All notable changes to this project will be documented here.
 ### Added
 - Functionality for reference genome T2T-aligned data
 - Generate allele frequency maps
+- Option to receive phyloimputed nucleotides (A, C, G, T, N) instead of default ancestral states (A, D, X).
 ### Fixed
 - Bug fix for ISOGG 2020 tree, when using vcf file. The database contains ancestral/derived allele switch-ups that leads to wrong haplogroup predictions for haplogroups afar from reference haplogroup R, e.g., A and B. >90 switch up positions were found and changed (see "switched_alleles_isogg.csv")
 - Functioning for vcf files that contain non-polymorphic variants, i.e. alleles corresponding to reference allele.
