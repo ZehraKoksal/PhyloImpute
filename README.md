@@ -39,7 +39,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 | `-tree`          | Path to the available phylogenetic tree. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                        | Optional* (mutually exclusive with customtree)        |
 | `-customtree`    | Path to a custom phylogenetic tree.                                                                          | Optional* (mutually exclusive with tree)    |
 | `-output`        | Path to an existing folder where output files will be saved.                                                 | Required                          |
-| `-nucleotides`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                     | Optional                          |
+| `-nucleotide`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                     | Optional                          |
 
 
 <br>
@@ -85,7 +85,7 @@ This file contains observed (**D**, **A**, **X**) and imputed (**d**, **a**) all
 
 <img src="/test_run/images/Output_partly.png" alt="Output preview" width="350"/>  
 
-Option to receive nucleotides (A/a, C/c, G/g, T/t, N) instead of default ancestral states (A/a, D/d, X), if specifying **-nucleotides**.
+Option to receive nucleotides (A/a, C/c, G/g, T/t, N) instead of default ancestral states (A/a, D/d, X), if specifying **-nucleotide**.
 <br>
 
 ##### 3.1.1.3.2) haplogroups.csv
@@ -123,7 +123,7 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 | `-vcf_ref`       | Reference genome used for VCF files. Options: `GRCh37`, `GRCh38`, `T2T`.                                          | Required                          |
 | `-vcf_chr`       | Chromosome ID in the VCF file (e.g., `NC_000024.9` for GRCh37).                                                   | Required                          |
 | `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                               | Optional (used with `-customtree`)|
-| `-nucleotides`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                | Optional                          |
+| `-nucleotide`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                | Optional                          |
 
 <br>
 
