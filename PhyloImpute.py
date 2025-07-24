@@ -24,6 +24,8 @@ parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze,
 parser.add_argument("-vcf_dic", help="If you are using a custom tree, you need to provide the path to a tab-separated .csv dictionary file that gives information on the genetic markers of interest that are also provided in the custom tree. Using the following column names: 'marker'(=marker names that are identical with the custom tree marker names),'GRCh37' and/or 'GRCh38' and/or 'T2T','Anc'(=ancestral allele), 'Der'(=derived allele)")
 parser.add_argument("-tree", choices=["Y_minimal","NAMQY","ISOGG_2020"],help="Optional: path to tab-separated custom file of the phylogenetic SNP tree.")
 parser.add_argument("-customtree", help="The path to a custom tree has to be provided in the same format as the tree files Y_minimal.csv, etc. Custom tree need to start with a root snp, e.g. 'ROOT'.")
+parser.add_argument('-nucleotide', action='store_true', help='If specified, prints nucleotides (A,C,G,T) instead of allelic states (D/d,A/a,X) in phyloimputed file.')
+
 
 parser.add_argument('-freqmap', action='store_true', help='Generate allele frequency map for specified SNP.')
 parser.add_argument("-f_snp", help="Define SNP name to generate allele frequency maps.")
@@ -451,9 +453,54 @@ for col_name, col in df.items(): #iteritems()
 
 #flatten list of sets:
 questionable_SNPs=list(questionable_SNPs)
+#remove "snp" called ROOT (that is not a real snp)
+df = df[df.index != "ROOT"]
+
+#If user wants nucleotides instead of allelic states
+
+    
+if args.nucleotide:
+    print("nucl")
+    print(df)
+
+    dic = dic.drop(columns=["GRCh37","GRCh38","T2T","Hg"])
+    dic = dic.drop_duplicates()
+    dic = dic.drop_duplicates(subset='marker')
+
+    dic_indexed = dic.drop_duplicates(subset='marker').set_index('marker')
+
+    print(dic_indexed)
+    
+    # first define the transformation function
+    def transform_row(row):
+        marker = row.name
+        if marker not in dic_indexed.index:
+            return row  # skip if no mapping
+
+        anc = dic_indexed.at[marker, 'Anc']
+        der = dic_indexed.at[marker, 'Der']
+        def convert(val):
+            if val == 'a':
+                return anc.lower()
+            elif val == 'A':
+                return anc.upper()
+            elif val == 'd':
+                return der.lower()
+            elif val == 'D':
+                return der.upper()
+            elif val == 'X':
+                return 'N'
+            else:
+                return val  # leave unchanged if unexpected
+        return row.apply(convert)
+    #apply function
+    df = df.apply(transform_row, axis=1)
+    print(df)
+    path_output = args.output + "_phyloimputed_nucl.csv"
+else:
+    path_output = args.output + "_phyloimputed.csv"
 
 #Save outputs
-path_output = args.output + "_phyloimputed.csv"
 path_conflicting_SNPs = args.output + "_conflicting_SNPs.csv"
 haplogroup_info = args.output + "_haplogroups.csv"
 
