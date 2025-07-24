@@ -36,9 +36,11 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 |------------------|-------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | `-input_format`  | Input file format (e.g., `csv`).                                                                             | Required                          |
 | `-input`         | Path to the input file.                                                                                      | Required                          |
-| `-tree`          | Path to the available phylogenetic tree. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                       | Optional* (mutually exclusive with customtree)        |
+| `-tree`          | Path to the available phylogenetic tree. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                        | Optional* (mutually exclusive with customtree)        |
 | `-customtree`    | Path to a custom phylogenetic tree.                                                                          | Optional* (mutually exclusive with tree)    |
 | `-output`        | Path to an existing folder where output files will be saved.                                                 | Required                          |
+| `-nucleotides`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                     | Optional                          |
+
 
 <br>
 
@@ -79,9 +81,11 @@ It follows the ISOGG tree nomenclature and this structure:
 #### 3.1.1.3) Output files
 
 ##### 3.1.1.3.1) phyloimputed.csv
-This file contains observed (**D**, **A**, **X**) and imputed (**d**, **a**) allelic states for reported SNPs plus additional SNPs from the phylogenetic tree, including a ROOT SNP.
+This file contains observed (**D**, **A**, **X**) and imputed (**d**, **a**) allelic states for reported SNPs plus additional SNPs from the phylogenetic tree.
 
 <img src="/test_run/images/Output_partly.png" alt="Output preview" width="350"/>  
+
+Option to receive nucleotides (A/a, C/c, G/g, T/t, N) instead of default ancestral states (A/a, D/d, X), if specifying **-nucleotides**.
 <br>
 
 ##### 3.1.1.3.2) haplogroups.csv
@@ -118,7 +122,8 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 | `-customtree`    | Path to a custom phylogenetic tree.                                                                               | Optional* (mutually exclusive with tree)    |
 | `-vcf_ref`       | Reference genome used for VCF files. Options: `GRCh37`, `GRCh38`, `T2T`.                                          | Required                          |
 | `-vcf_chr`       | Chromosome ID in the VCF file (e.g., `NC_000024.9` for GRCh37).                                                   | Required                          |
-| `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                              | Optional (used with `-customtree`)|
+| `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                               | Optional (used with `-customtree`)|
+| `-nucleotides`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                | Optional                          |
 
 <br>
 
