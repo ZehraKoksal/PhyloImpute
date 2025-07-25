@@ -462,21 +462,16 @@ df = df[df.index != "ROOT"]
 if args.nucleotide:
     print("nucl")
     print(df)
-
     dic = dic.drop(columns=["GRCh37","GRCh38","T2T","Hg"])
     dic = dic.drop_duplicates()
     dic = dic.drop_duplicates(subset='marker')
-
     dic_indexed = dic.drop_duplicates(subset='marker').set_index('marker')
 
-    print(dic_indexed)
-    
     # first define the transformation function
     def transform_row(row):
         marker = row.name
         if marker not in dic_indexed.index:
-            return row  # skip if no mapping
-
+            return None
         anc = dic_indexed.at[marker, 'Anc']
         der = dic_indexed.at[marker, 'Der']
         def convert(val):
@@ -491,11 +486,11 @@ if args.nucleotide:
             elif val == 'X':
                 return 'N'
             else:
-                return val  # leave unchanged if unexpected
+                return "unexpected entry"  # leave unchanged if unexpected
         return row.apply(convert)
     #apply function
     df = df.apply(transform_row, axis=1)
-    print(df)
+    df = df.dropna()  # Drop rows that returned None
     path_output = args.output + "_phyloimputed_nucl.csv"
 else:
     path_output = args.output + "_phyloimputed.csv"
