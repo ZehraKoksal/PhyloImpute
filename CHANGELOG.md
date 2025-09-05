@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented here.
 
+## Upcoming updates for [v1.3]
+### Added
+- ability to input also multisample vcf files
+- uncertainty warning for user: Asterisk * before predicted haplogroup (if Confidence value < Penalty value 1)
+- automatically generated log file
+- possibility to output imputed file in multisample vcf format (0:999 indicates imputed Reference allele, 1:999 indicates imputed Alternative 1 allele, 2:999 etc.)
+### Fixed
+- bug for SNPs without any derived alleles
+---
+
+
 ## [v1.2] – 2025-07-24
 ### Added
 - Functionality for reference genome T2T-aligned data
