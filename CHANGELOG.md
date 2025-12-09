@@ -8,8 +8,10 @@ All notable changes to this project will be documented here.
 - uncertainty warning for user: Asterisk * before predicted haplogroup (if Confidence value < Penalty value 1)
 - automatically generated log file
 - possibility to output imputed file in multisample vcf format (0:999 indicates imputed Reference allele, 1:999 indicates imputed Alternative 1 allele, 2:999 etc.)
+- In "_haplogroups.csv" file add "downstream_ancestral" and "downstream_unknown" columns that contains the downstream haplogroup names with the specific SNPs that are ancestral or not known to allow user to verify if the predicted haplogroup is correct or simply lacking resolution due to sample quality
 ### Fixed
 - bug for SNPs without any derived alleles
+- replace asterisk (*) in NAMQY haplogroup names by " to avoid confusion in nomenclature meaning for asterisks
 ---
 
 
