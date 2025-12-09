@@ -4,14 +4,20 @@ import time
 import shutil
 import glob
 import os, sys
+import gzip
 import pandas as pd
 import math
 import numpy as np
 import subprocess
 import warnings
+from datetime import datetime
 
 print("\n")
 start_time = time.time()
+
+# Generate a timestamped filename
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+log_filename = f"phyloimpute_log_{timestamp}.txt"
 
 #User input paths
 parser = argparse.ArgumentParser()
@@ -21,6 +27,7 @@ parser.add_argument("-input_format", choices=["vcf","csv"],help="Option 'vcf' is
   "For both options: Refrain from using comma separated marker or sequence names.")
 
 parser.add_argument("-input", required=True, help="For 'vcf' give the folder to the vcf files. For 'csv', give the path to one csv file. If -freqmap is specified, this needs to specify phyloimputed (or external) tab-separated csv file for allele frequency map.")
+parser.add_argument('-v', action='store_true', help='Specify to output phyloimputed multi-sample vcf file.')
 parser.add_argument("-output", required=True, help="Path to output folder.")
 parser.add_argument("-vcf_ref", choices=["GRCh37","GRCh38","T2T"],help="When using the 'vcf' option, give the version of the reference genome used for the alignment: GRCh37, GRCh38, or T2T") 
 parser.add_argument("-vcf_chr", help="How is the chromosome you want to analyze, named in your vcf file? This depends on the reference genome used and can be e.g. 'Y','chrY', 'NC_000024.9' for the human Y chromosome.")
@@ -48,12 +55,29 @@ args = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+#FOR VCF FORMAT OUTPUT FILES
+def merge_vcfs(vcf_folder, output_vcf="merged.vcf.gz"):
+    vcf_files = sorted(glob.glob(os.path.join(vcf_folder, "*.vcf"))) 
+    if not vcf_files:
+        raise FileNotFoundError("No VCF files found in the folder.")
+    compressed_files = []
+    for vcf in vcf_files:
+        if vcf.endswith(".vcf"):
+            gz = vcf + ".gz"
+            with open(gz, "wb") as out:# Compress with bgzip_rocky, writing to gz
+                subprocess.run(["bgzip_rocky", "-c", vcf], stdout=out, check=True)
+            subprocess.run(["tabix_rocky", "-p", "vcf", gz], check=True)# Index with tabix_rocky
+            compressed_files.append(gz)
+    cmd = ["bcftools-1.20-rocky", "merge", "-Oz", "--force-samples", "-o", output_vcf] + compressed_files #"--force-samples", because of duplicate sample names
+    subprocess.run(cmd, check=True)
+    # Clean up
+    to_remove = [f + ".gz" for f in vcf_files] + [f + ".gz.tbi" for f in vcf_files]
+    subprocess.run(["rm", "-f"] + to_remove, check=True)
+    print(f"Merged {len(compressed_files)} files into {output_vcf}")
+    
+
 #GENERATE ALLELE FREQUENCY MAP
-
-
 if args.freqmap:
-    # if type(args.color) != str: #default
-        # args.color = "blue"
     if not type(args.f_coordinates) == str:
         print("Please define sample names with corresponding coordinates using -f_coordinates. Provide path to csv file with sample names in first column (case-sensitive to input file) and coordinates in second column.")
         sys.exit()
@@ -81,7 +105,6 @@ if args.freqmap:
     elif args.country:
         cmd.extend(['-country'] + args.country) 
     subprocess.run(cmd)    
-
     sys.exit()
 
 
@@ -90,65 +113,85 @@ if not args.input_format:
     sys.exit()
     
 #FOR VCF INPUT FILE
-print("PhyloImpute v1.2 is running...")
+print("PhyloImpute v1.3 is running...")
 print("\n")
+with open(log_filename, "w") as f:
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    f.write(f"[{timestamp}]\tPhyloImpute v1.3 started ...\n")
+    
 def check_for_vcf_files(directory):
     vcf_files = glob.glob(os.path.join(directory, '*.vcf'))
     if vcf_files:
-        print(f'\nFound .vcf files:')
-        print(vcf_files)
+        print(f'Found vcf files.')
+        with open(log_filename, "a") as f:
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            f.write(f"[{timestamp}]\tFound .vcf files: {vcf_files}\n")
         return vcf_files
     else:
         print('\nNo .vcf files found.')
         return []
 
+if args.tree=="Y_minimal":
+    dic= pd.read_csv("./Y_minimal_dic.csv", sep="\t")
+    #list of positions frm dictionary to filter from vcf file
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+    dic_pos = dic[args.vcf_ref].values.tolist()
+    dic_Anc = dic["Anc"].values.tolist()
+    dic_Der = dic["Der"].values.tolist()
+    dic_marker = dic["marker"].values.tolist()
+elif args.tree=="NAMQY":
+    dic= pd.read_csv("./NAMQY_dic.csv", sep="\t")
+    #list of positions frm dictionary to filter from vcf file
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+    dic_pos = dic[args.vcf_ref].values.tolist()
+    dic_Anc = dic["Anc"].values.tolist()
+    dic_Der = dic["Der"].values.tolist()
+    dic_marker = dic["marker"].values.tolist()
+elif args.tree=="ISOGG_2020":
+    dic= pd.read_csv("./ISOGG_2020_dic.csv", sep="\t")
+    #list of positions frm dictionary to filter from vcf file
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+    dic_pos = dic[args.vcf_ref].values.tolist()
+    dic_Anc = dic["Anc"].values.tolist()
+    dic_Der = dic["Der"].values.tolist()
+    dic_marker = dic["marker"].values.tolist()
+#If you are using a custom tree you need to also provide a custom dictionary and extract the information here
+elif type(args.customtree)==str:
+    dic= pd.read_csv(args.vcf_dic, sep="\t")
+    #list of positions frm dictionary to filter from vcf file
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
+    dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
+    dic_pos = dic[args.vcf_ref].values.tolist()
+    dic_Anc = dic["Anc"].values.tolist()
+    dic_Der = dic["Der"].values.tolist()
+    dic_marker = dic["marker"].values.tolist()
+
+
+#Make dic for later with SNP name and hg
+marker_to_hg = dict(zip(dic["marker"], dic["Hg"]))    
+     
+        
 #get_marker_info_from_vcf by using a dictionary file
 if args.input_format == "vcf":
-    if args.tree=="Y_minimal":
-        dic= pd.read_csv("./Y_minimal_dic.csv", sep="\t")
-        #list of positions frm dictionary to filter from vcf file
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
-        dic_pos = dic[args.vcf_ref].values.tolist()
-        dic_Anc = dic["Anc"].values.tolist()
-        dic_Der = dic["Der"].values.tolist()
-        dic_marker = dic["marker"].values.tolist()
-    elif args.tree=="NAMQY":
-        dic= pd.read_csv("./NAMQY_dic.csv", sep="\t")
-        #list of positions frm dictionary to filter from vcf file
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
-        dic_pos = dic[args.vcf_ref].values.tolist()
-        dic_Anc = dic["Anc"].values.tolist()
-        dic_Der = dic["Der"].values.tolist()
-        dic_marker = dic["marker"].values.tolist()
-    elif args.tree=="ISOGG_2020":
-        dic= pd.read_csv("./ISOGG_2020_dic.csv", sep="\t")
-        #list of positions frm dictionary to filter from vcf file
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
-        dic_pos = dic[args.vcf_ref].values.tolist()
-        dic_Anc = dic["Anc"].values.tolist()
-        dic_Der = dic["Der"].values.tolist()
-        dic_marker = dic["marker"].values.tolist()
-    #If you are using a custom tree you need to also provide a custom dictionary and extract the information here
-    elif type(args.customtree)==str:
-        dic= pd.read_csv(args.vcf_dic, sep="\t")
-        #list of positions frm dictionary to filter from vcf file
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype('Int64')
-        dic[args.vcf_ref] = dic[args.vcf_ref].astype(str)
-        dic_pos = dic[args.vcf_ref].values.tolist()
-        dic_Anc = dic["Anc"].values.tolist()
-        dic_Der = dic["Der"].values.tolist()
-        dic_marker = dic["marker"].values.tolist()
+    
+        
+    #Separate dic file from ref
+    ref_dic = dic.copy()
+    dic = dic.drop(columns=["Ref"])
+    
+
     #Make input table for Phyloimpute
     #turn positions to strings, so they can be recognized later in the data tables
     input_table = pd.DataFrame({'pos':dic_pos, 'Sample':dic_marker, 'der': dic_Der})
     input_table_raw = pd.DataFrame({'pos':dic_pos, 'Sample':dic_marker, 'der': dic_Der})
-    # input_table = input_table.drop_duplicates()
+    input_table = input_table.drop_duplicates()
     input_table = input_table.sort_index().reset_index(drop=True)
-    # print(input_table)
     column_missing_data = len(input_table)*["X"]
+    # print(input_table)
+    # print(ee)
 
 
 def extract_sample_name(file_path):
@@ -157,6 +200,7 @@ def extract_sample_name(file_path):
     sample_name = sample_name_format.replace(".csv", "")
     sample_name = sample_name_format.replace(".vcf", "")
     return sample_name
+
 
 def filter_vcf_file(file_path):
     data = []
@@ -170,20 +214,45 @@ def filter_vcf_file(file_path):
                 data.append(line.strip().split('\t'))
     #Create dataframe from the data
     df = pd.DataFrame(data,columns=columns)
+
+    df = df.drop_duplicates(subset=["POS"])
+
     #Filter chromosome column
     df = df[df["#CHROM"].isin([args.vcf_chr])]
+    
+    #Keep only first base in ref and of alts
+    df['REF'] = df['REF'].str[0]
+    # Split by comma
+    df['ALT'] = df['ALT'].str.split(',')
+
+    # Keep only first letter per allele
+    df['ALT'] = df['ALT'].apply(lambda alleles: [a[0] for a in alleles])
+
     #Filter positions of variants from database
     df = df[df["POS"].isin(dic_pos)]
+    
+
+    #check if multi-sample vcf
+    # if len(df.columns)>10:
+        # print("Multi-sample vcf recognized.")
+    samples_list = df.columns[9:].tolist()
+    print(samples_list)
+    
+
     #Also filter that is the derived allele that we see:
     ##Make list of variant positions in the same order
     vcf_pos_list = df["POS"].tolist()
     dic_vcf_pos = dic[dic[args.vcf_ref].isin(vcf_pos_list)]
-
+    # print(dic_vcf_pos)
 
     warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
     #now sort according to order in the list
     dic_vcf_pos.loc[:, 'sort_key']= pd.Categorical(dic_vcf_pos.loc[:, args.vcf_ref], categories=vcf_pos_list, ordered=True)
+    
+    
     sorted_dic_vcf_pos= dic_vcf_pos.sort_values('sort_key').drop('sort_key', axis=1)
+
+    
     #and remove index
     sorted_dic_vcf_pos.reset_index(drop=True, inplace=True)
     #Take the derived alleles from dictionary in same order to the vcf file 
@@ -191,84 +260,156 @@ def filter_vcf_file(file_path):
     df.reset_index(drop=True, inplace=True)
     #add derived alleles from dic per marker
     sorted_dic_vcf_pos_2 = pd.DataFrame()
-    sorted_dic_vcf_pos_2[["POS","der_from_dic_for_pos"]] = sorted_dic_vcf_pos[[args.vcf_ref,"Der"]]
+    # sorted_dic_vcf_pos_2[["POS","der_from_dic_for_pos"]] = sorted_dic_vcf_pos[[args.vcf_ref,"Der"]]
+    sorted_dic_vcf_pos_2[["POS","der_from_dic_for_pos","anc_dic"]] = sorted_dic_vcf_pos[[args.vcf_ref,"Der","Anc"]]
     sorted_dic_vcf_pos_2 = sorted_dic_vcf_pos_2.drop_duplicates()
 
     df = pd.merge(df,sorted_dic_vcf_pos_2, on="POS", how="left")
-    # for vcfs that also contain non polymorphic sites: if alt allele matches derived allele AND genotype column (this is index -2, because we inserted another column at the end) starts with 1. 
-    df_filtered_1 = df[
-    (df['ALT'] == df['der_from_dic_for_pos']) &
-    (df.iloc[:, -2].astype(str).str.startswith("1"))]
-    df_filtered_2 = df[
-    (df['REF'] == df['der_from_dic_for_pos']) &
-    (df.iloc[:, -2].astype(str).str.startswith("0"))]
-    df_filtered = pd.concat([df_filtered_1, df_filtered_2], ignore_index=True)  
 
-    #Make list of the position column
-    df_filtered_list_D = df_filtered["POS"].values.tolist()
-    df_filtered_list_D_der = df_filtered["der_from_dic_for_pos"].values.tolist()
-
+    # print(df)
+    # print(df.iloc[:, 9])
+    # print(ee)
     
-    #Repeat for ancestral alleles found in vcf file
-    df_filtered_A1 = df[
-    (df['REF'] != df['der_from_dic_for_pos']) &
-    (df.iloc[:, -2].astype(str).str.startswith("0"))]
-    df_filtered_A2 = df[
-    (df['ALT'] != df['der_from_dic_for_pos']) &
-    (df.iloc[:, -2].astype(str).str.startswith("1"))]
-    df_filtered_A = pd.concat([df_filtered_A1, df_filtered_A2], ignore_index=True)  
-    
-    #Make list of the position column
-    df_filtered_list_A = df_filtered_A["POS"].values.tolist()
-    df_filtered_list_A_der = df_filtered_A["der_from_dic_for_pos"].values.tolist()
+    #for multi-sample vcfs make dfs to store information in loop
+    df_filtered_list_D_all = []
+    df_filtered_list_D_der_all = []
+    df_filtered_list_A_all = []
+    df_filtered_list_A_der_all = []
 
-    return df_filtered_list_D, df_filtered_list_D_der, df_filtered_list_A, df_filtered_list_A_der
+    for sample, snr in zip(samples_list, range(len(samples_list))):
+        print(sample)
+        # print(snr)
+        column = 9 + snr
+        # print(column)
+        # for vcfs that also contain non polymorphic sites: if alt allele matches derived allele AND genotype column (this is index 9 + additional samples (for multisample vcf) 
+        df_filtered_1 = df[
+        (df['ALT'].str[0] == df['der_from_dic_for_pos']) &
+        (df.iloc[:, column].astype(str).str.startswith("1"))]
+        
+        df_filtered_0 = df[
+        (df['ALT'].str[1] == df['der_from_dic_for_pos']) &
+        (df.iloc[:, column].astype(str).str.startswith("2"))]
+        
+        df_filtered_2 = df[
+        (df['REF'] == df['der_from_dic_for_pos']) &
+        (df.iloc[:, column].astype(str).str.startswith("0"))]
+        df_filtered = pd.concat([df_filtered_1, df_filtered_2, df_filtered_0], ignore_index=True)  
+
+        # print(df_filtered)
+
+        #Make list of the position column
+        df_filtered_list_D = df_filtered["POS"].values.tolist()
+        df_filtered_list_D_der = df_filtered["der_from_dic_for_pos"].values.tolist()
+
+        
+        df_filtered_A1 = df[
+        (df['ALT'].str[0] == df['anc_dic']) &
+        (df.iloc[:, column].astype(str).str.startswith("1"))]
+        
+        df_filtered_A0 = df[
+        (df['ALT'].str[1] == df['anc_dic']) &
+        (df.iloc[:, column].astype(str).str.startswith("2"))]
+        
+        df_filtered_A2 = df[
+        (df['REF'] == df['anc_dic']) &
+        (df.iloc[:, column].astype(str).str.startswith("0"))]
+        df_filtered_A = pd.concat([df_filtered_A1, df_filtered_A2, df_filtered_A0], ignore_index=True)
+            
+  
+        #Make list of the position column
+        df_filtered_list_A = df_filtered_A["POS"].values.tolist()
+        df_filtered_list_A_der = df_filtered_A["der_from_dic_for_pos"].values.tolist()
+        
+        df_filtered_list_known = df_filtered_list_A + df_filtered_list_D
+        
+        # print(len(df_filtered_list_D))
+        # print(len(df_filtered_list_A))
+        # print(len(df_filtered_list_known))
+        
+        #for now: ignore
+        # df_unknown = df[~df["POS"].isin(df_filtered_list_known)]
+        # print(df_unknown.iloc[:,3:])
+        # df_unknown = df_unknown[~df_unknown[sample].str.startswith(".")]
+        # print(df_unknown.iloc[:,3:10])
+
+
+        df_filtered_list_D_all.append(df_filtered_list_D)
+        df_filtered_list_D_der_all.append(df_filtered_list_D_der)
+        df_filtered_list_A_all.append(df_filtered_list_A)
+        df_filtered_list_A_der_all.append(df_filtered_list_A_der)
+        
+        # print(df_filtered_list_D_all)
+        # print(eee)
+
+    return df_filtered_list_D_all, df_filtered_list_D_der_all, df_filtered_list_A_all, df_filtered_list_A_der_all, samples_list
 
 
 
 if args.input_format == "vcf":
     vcf_files = check_for_vcf_files(args.input)
     if type(args.vcf_ref)==str and type(args.vcf_chr)==str:
-        print("\nNecessary input files are provided!\n")
+        print("\nNecessary input files are provided. Processing files now!\n")
         #Now that checking is over, we loop through 
         for vcf_file in vcf_files:
-            print(f'Processing file: {vcf_file}')
-            derived_variant_pos, derived_variant_der, ancestral_variant_pos, ancestral_variant_der =filter_vcf_file(vcf_file)
-
-            sample_name = extract_sample_name(vcf_file)
-            #Add sample column to input table with "X"s in it
-            input_table[sample_name] = column_missing_data
-
-            remove_set_d = set(zip(derived_variant_pos, derived_variant_der))
-            remove_set_a = set(zip(ancestral_variant_pos, ancestral_variant_der))
+            with open(log_filename, "a") as f:
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                f.write(f'[{timestamp}]\tProcessing file: {vcf_file}\n')
+            derived_variant_pos_all, derived_variant_der_all, ancestral_variant_pos_all, ancestral_variant_der_all, samples_list =filter_vcf_file(vcf_file)
+            # print(derived_variant_pos_all)
             
+            # print(samples_list)
             input_table['pos_der'] = list(zip(input_table['pos'], input_table['der']))
-            input_table_D = input_table[input_table['pos_der'].isin(remove_set_d)]
-            input_table_D.loc[:,sample_name]="D"
-            input_table_A = input_table[input_table['pos_der'].isin(remove_set_a)]
-            input_table_A.loc[:,sample_name]="A"
+            for sample_name, derived_variant_pos, derived_variant_der, ancestral_variant_pos, ancestral_variant_der in zip(samples_list, derived_variant_pos_all, derived_variant_der_all, ancestral_variant_pos_all, ancestral_variant_der_all):
+                # sample_name = extract_sample_name(vcf_file)
+                #Add sample column to input table with "X"s in it
+                input_table[sample_name] = column_missing_data
+                # print(input_table)
+                remove_set_d = set(zip(derived_variant_pos, derived_variant_der))
+                remove_set_a = set(zip(ancestral_variant_pos, ancestral_variant_der))
+                
+                # Assign values directly using .loc and isin
+                mask_d = input_table['pos_der'].isin(remove_set_d)
+                mask_a = input_table['pos_der'].isin(remove_set_a)
 
-            #Combine dfs
-            input_table_no_info = input_table[~input_table['pos_der'].isin(remove_set_d)]
-            #Repeat for ancestral
-            input_table_no_info = input_table_no_info[~input_table_no_info['pos_der'].isin(remove_set_a)]
-            input_table = pd.concat([input_table_D, input_table_A, input_table_no_info])
+                input_table.loc[mask_d, sample_name] = "D"
+                input_table.loc[mask_a, sample_name] = "A"
+                
+                # input_table_D = input_table[input_table['pos_der'].isin(remove_set_d)]
+                # input_table_D.loc[:,sample_name]="D"
+                # input_table_A = input_table[input_table['pos_der'].isin(remove_set_a)]
+                # input_table_A.loc[:,sample_name]="A"
+                #Combine dfs
+                # input_table_no_info = input_table[~input_table['pos_der'].isin(remove_set_d)]
+                #Repeat for ancestral
+                # input_table_no_info = input_table_no_info[~input_table_no_info['pos_der'].isin(remove_set_a)]
+                # input_table = pd.concat([input_table_D, input_table_A, input_table_no_info])
+                # print(input_table)
 
+            
+            #clean up            
             input_table = input_table.drop(columns='pos_der')
+            input_table = input_table.drop_duplicates(subset=["Sample","pos"])
             input_table = input_table.sort_index().reset_index(drop=True)
-
+            
+            # print(input_table)
+            # print(ee)
 
         #replace pos column and reindex
         input_table.reset_index(drop=True, inplace=True)
         input_table["pos"]=range(1,len(input_table)+1)
         df = input_table
+        # print(df)
         df.set_index("Sample", inplace=True)
         #rename column pos
         df.rename(columns={'pos':0}, inplace=True)
         df = df.drop(columns=['der'])
+        # print(df)
+        # print(ee)
     else:
         print("\nOne or both of the input files vcf_ref or vcf_chr are missing! Please provide and rerun. See help function for more information. \n")
-
+        with open(log_filename, "a") as f:
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            f.write(f'[{timestamp}]\tOne or both of the input files vcf_ref or vcf_chr are missing! Please provide and rerun. See help function for more information.\n')
 
 
 if args.input_format == "csv":
@@ -317,6 +458,10 @@ if type(args.customtree) == str:
     custom_tree_path = current_dir + "/custom_tree.csv"
     tree_df.to_csv(custom_tree_path, index=False, sep='\t')
     print("SNP database generated and saved!")
+    with open(log_filename, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f.write(f'[{timestamp}]\tSNP database for custom tree generated and saved!\n')
+
 
 if args.tree == "ISOGG_2020":
     filename = args.tree + ".csv.gz"
@@ -378,40 +523,117 @@ def preprocess_set(s):
     return processed_set
 questionable_SNPs= [] #something is off with these variants position
 
-Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value1\tPenalty_value2"]
+Haplogroup_info = ["Sample\tHg\tConfidence_value\tPenalty_value1\tPenalty_value2\tdownstream_ancestral\tdownstream_unknown"]
 for col_name, col in df.items(): #iteritems()
     lengths_list = []
-    filtered_D= df[col_name]=="D"
+    # print(df[col_name])
+    filtered_D= df[col_name]=="D"    
     sample_D_list = df[filtered_D].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
-    filtered_A= df[col_name]=="A"
+    # print(filtered_D)
+    # print(sample_D_list)
+    # print(ee)
     
-    sample_A_list = df[filtered_A].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
-    sample_A_set=set(sample_A_list)
-    #Compare each sample's derived lists with the database lists
-    for db_list in tree_lists:
-        processed_D_list=preprocess_set(sample_D_list)
-        processed_db_list=preprocess_set(db_list)
-        overlapping_entries=processed_D_list.intersection(processed_db_list)
-        len_overlap = len(overlapping_entries)
-        lengths_list.append(len_overlap)
-    max_index = lengths_list.index(max(lengths_list))
-       
-    #get the database row that will be used to replace missing data
-    #are any of these items overlapping with ancestral observations in the sample?
-    new_D_db =set(tree_lists[max_index])  # matches = {item for item in new_D_db if "F313" in item}
-    processed_set1=preprocess_set(sample_A_list)
-    max_d=preprocess_set(tree_lists[max_index])
-    
-    #GET INFO ON HG OF SAMPLE           ##HG
-    overlapping_derived=processed_D_list.intersection(max_d) #overlap between derived snps and snps of max branches
-    
-    if len(overlapping_derived) == 0:
+    if len(sample_D_list) == 0:
+        print(f"No derived SNPs were found for {col_name}, therefore no imputation is possible. You could try using a different phylogenetic tree for imputation or retrieve more sequencing data.\n")
+        with open(log_filename, "a") as f:
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            f.write(f'[{timestamp}]\tNo derived SNPs were found for {col_name}, therefore no imputation is possible. You could try using a different phylogenetic tree for imputation or retrieve more sequencing data.")\n')
+        #FOR HG
         Hg_sample = "No hg pred possible, because no informative derived alleles"
         Hg_support = "-"
         Hg_penalty1 = "-"
         Hg_penalty2 = "-"
+        dwn_A = "-"
+        dwn_X = "-"
+        Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)+"\t"+str(dwn_A)+"\t"+str(dwn_X)) #col_name is the sample name
+        
+        #For questionable SNPs
+        questionable_entry_A = str(col_name)+": - "
+        questionable_SNPs.append(questionable_entry_A)
     else:
+        filtered_A= df[col_name]=="A"
+        sample_A_list = df[filtered_A].index.tolist()#make a list of the index values (SNP names) of the filtered dataframe
+        sample_A_set=set(sample_A_list)
+        # print(sample_A_set)
+        #Compare each sample's derived lists with the database lists
+        # print(Ee)
+        processed_D_list=preprocess_set(sample_D_list)
+        for db_list in tree_lists:
+            processed_db_list=preprocess_set(db_list)
+            overlapping_entries=processed_D_list.intersection(processed_db_list)
+            len_overlap = len(overlapping_entries)
+            lengths_list.append(len_overlap)
+        max_index = lengths_list.index(max(lengths_list))
+        
+        #get the database row that will be used to replace missing data
+        #are any of these items overlapping with ancestral observations in the sample?
+        new_D_db =set(tree_lists[max_index])  # matches = {item for item in new_D_db if "F313" in item}
+        # print(new_D_db)
+        highest_resolution_D_tree = tree_lists[max_index][-1]
+        highest_resolution_D_tree = set(highest_resolution_D_tree.split(","))
+        # print(highest_resolution_D_tree)
+        
+        highest_resolution_SNP=processed_D_list.intersection(highest_resolution_D_tree)
+        # print(highest_resolution_SNP)
+        
+        
+        # print(ee)
+        # print(sample_D_list)
+        # print(ee)
+        processed_set1=preprocess_set(sample_A_list)
+        max_d=preprocess_set(tree_lists[max_index])
+
+        
+        #GET INFO ON HG OF SAMPLE           ##HG
+        overlapping_derived=processed_D_list.intersection(max_d) #overlap between derived snps and snps of max branches
         Hg_sample = hg_table[max_index]
+        
+        #Now check if downstream markers are ancestral or absent
+
+        # print(Hg_sample)
+        # matches = [lst for lst in tree_lists if all(x in lst for x in new_D_db)]
+        matches = [lst for lst, lst_set in zip(tree_lists, map(set, tree_lists))
+        if new_D_db.issubset(lst_set) and lst_set != new_D_db]
+        # print(matches)
+        
+        #removed all entries up to most resolved SNP, giving downstream SNPs
+        filtered_matches = [
+            [x for x in lst if x not in new_D_db]
+            for lst in matches
+        ]
+        # print(filtered_matches)
+        
+        flat_list_dwnstream = [x for lst in filtered_matches for x in lst]
+        # print(flat_list_dwnstream)
+        #remove duplicates
+        flat_list_dwnstream = list(set(flat_list_dwnstream))
+        # print(flat_list_dwnstream)
+        #split by commas
+        flat_list_dwnstream_preprocess = preprocess_set(flat_list_dwnstream)
+        # print(flat_list_dwnstream_preprocess)
+        
+        dwnstream_ancestral = processed_set1.intersection(flat_list_dwnstream_preprocess)
+        # print(dwnstream_ancestral)
+        
+        dwnstream_X = flat_list_dwnstream_preprocess - dwnstream_ancestral
+        # print(dwnstream_X)
+        
+        #Look for haplogroups of these SNPs
+        Hgs_Anc_down = [marker_to_hg[m] for m in dwnstream_ancestral if m in marker_to_hg]
+        Hgs_Anc_down_trimmed = [item.replace(Hg_sample, "~") for item in Hgs_Anc_down]
+        #Combine Hgs and SNPs
+        dwn_A = [f"{a}-{b}" for a, b in zip(Hgs_Anc_down_trimmed, dwnstream_ancestral)]
+        # print(dwn_A) #OUTPUT
+        # print(ee)
+        
+        #Repeat for missing SNPs
+        Hgs_X_down = [marker_to_hg[m] for m in dwnstream_X if m in marker_to_hg]
+        Hgs_X_down_trimmed = [item.replace(Hg_sample, "~") for item in Hgs_X_down]
+        dwn_X = [f"{a}-{b}" for a, b in zip(Hgs_X_down_trimmed, dwnstream_X)]
+        # print(dwn_X) #OUTPUT
+        
+
+        
         Hg_support = str(len(overlapping_derived))+"/"+str(len(max_d))
         #Penalty comprises of variants in the max_d_branch that are ancestral (but are expected to be derived)
         #But also of variants that are derived but not in the max_d_branch
@@ -420,83 +642,292 @@ for col_name, col in df.items(): #iteritems()
         
         Hg_penalty_part2 = processed_D_list - max_d #How many in other branches are derived #TO DO: exclude SNPs that are not in tree
         Hg_penalty_part2 = Hg_penalty_part2 - df_exclusive_SNPs #remove SNPs that are derived in data, but not in tree
+        
+        #uncertain
+        if int(len(Hg_penalty_part1)) > int(len(overlapping_derived)):
+            Hg_sample = "*" + Hg_sample
+
+        Hg_sample = Hg_sample + "-" + "/".join(highest_resolution_SNP)
+        
+
         if "ROOT" in tree_snps:
             total_snps_tree = len(tree_snps)-2 #Remove title and ROOT
         else:
             total_snps_tree = len(tree_snps)-1 #Remove title, No ROOT
         Hg_penalty2 = str(len(Hg_penalty_part2))+"/"+str(total_snps_tree) #divided by total number of variants
         
-    Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)) #col_name is the sample name
-
+        # Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)) #col_name is the sample name
+        Haplogroup_info.append(col_name+"\t"+Hg_sample+"\t"+str(Hg_support)+"\t"+str(Hg_penalty1)+"\t"+str(Hg_penalty2)+"\t"+str(dwn_A)+"\t"+str(dwn_X))
     
-    overlapping_entries=processed_set1.intersection(max_d)
-    if len(processed_D_list) > 0:
-        if len(Hg_penalty_part1)>0:
-            questionable_entry_A = str(col_name)+":"+str(Hg_penalty_part1)+" (ancestral allele inside main branch)"
-            questionable_SNPs.append(questionable_entry_A)
-        if len(Hg_penalty_part2)>0:
-            questionable_entry_D = str(col_name)+":"+str(Hg_penalty_part2)+" (derived allele inside parallel branch)"
-            questionable_SNPs.append(questionable_entry_D)
+        # overlapping_entries=processed_set1.intersection(max_d)
+        if len(processed_D_list) > 0:
+            if len(Hg_penalty_part1)>0:
+                questionable_entry_A = str(col_name)+":"+str(Hg_penalty_part1)+" (ancestral allele inside main branch)"
+                questionable_SNPs.append(questionable_entry_A)
+            if len(Hg_penalty_part2)>0:
+                questionable_entry_D = str(col_name)+":"+str(Hg_penalty_part2)+" (derived allele inside parallel branch)"
+                questionable_SNPs.append(questionable_entry_D)
 
-    
-    #A)get the SNPs from the database row, but exclude those that were ancestral in the sample
-    to_replace_derived = max_d.difference(processed_set1)
-    new_D_db = max_d-processed_set1-processed_D_list #the snps in the database row excluding the ancestral and derived variants from the current sample
-    
-    if len(new_D_db) > 0:
-        filtered_df = df[df.index.isin(new_D_db)]
-        unfiltered_df = df[~df.index.isin(new_D_db)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
-        filtered_df.loc[:,col_name]="d" #make the all derived (filling gaps step) #*for inference
-        df=pd.concat([filtered_df,unfiltered_df])
+        
+        #A)get the SNPs from the database row, but exclude those that were ancestral in the sample
+        to_replace_derived = max_d.difference(processed_set1)
+        new_D_db = max_d-processed_set1-processed_D_list #the snps in the database row excluding the ancestral and derived variants from the current sample
+        
+        if len(new_D_db) > 0:
+            filtered_df = df[df.index.isin(new_D_db)]
+            unfiltered_df = df[~df.index.isin(new_D_db)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
+            filtered_df.loc[:,col_name]="d" #make the all derived (filling gaps step) #*for inference
+            df=pd.concat([filtered_df,unfiltered_df])
+        
+        #B)turn X to A
+        A_list = []
+        for i in range(len(tree_lists[max_index])):
+            #filter for each column between max_d list and dataframe tree
+            df_mismatch = tree[~tree.iloc[:,i].isin([tree_lists[max_index][i]])]
+            #if there are parallel branches, df_mismatch will have a length > 0
+            if len(df_mismatch) > 0:
+                #take all variants that are parallel to our sample based on the one column
+                data_array=df_mismatch.values
+                parallel_markers=data_array.flatten().tolist()
+                #remove nan
+                parallel_markers = {x for x in parallel_markers if pd.notnull(x)}
+                parallel_markers = {x for x in parallel_markers if x is not np.nan}
 
-    
-    #B)turn X to A
-    A_list = []
-    for i in range(len(tree_lists[max_index])):
-        #filter for each column between max_d list and dataframe tree
-        df_mismatch = tree[~tree.iloc[:,i].isin([tree_lists[max_index][i]])]
-        #if there are parallel branches, df_mismatch will have a length > 0
-        if len(df_mismatch) > 0:
-            #take all variants that are parallel to our sample based on the one column
-            data_array=df_mismatch.values
-            parallel_markers=data_array.flatten().tolist()
-            #remove nan
-            parallel_markers = {x for x in parallel_markers if pd.notnull(x)}
-            parallel_markers = {x for x in parallel_markers if x is not np.nan}
+                A_list.append(list(parallel_markers))
+                #to set, to remove duplicate entries   
+        A_list=set([item for sublist in A_list for item in sublist]) #flatten list in lists
+        A_list = A_list - set(tree_lists[max_index]) #set(tree_lists[max_index]) are the derived snps
+        A_list_markers=preprocess_set(A_list)
+        #also remove the derived single (already processed snps) that are derived in the sample:
+        A_list_markers = A_list_markers -set(sample_D_list)
+        #now remove the ones that are already known to be ancestral
+        A_list_markers=A_list_markers-sample_A_set
+        #for recurrent snps: remove the ones that are imputed to be derived
+        A_list_markers=A_list_markers-max_d
 
-            A_list.append(list(parallel_markers))
-            #to set, to remove duplicate entries   
-    A_list=set([item for sublist in A_list for item in sublist]) #flatten list in lists
-    A_list = A_list - set(tree_lists[max_index]) #set(tree_lists[max_index]) are the derived snps
-    A_list_markers=preprocess_set(A_list)
-    #also remove the derived single (already processed snps) that are derived in the sample:
-    A_list_markers = A_list_markers -set(sample_D_list)
-    #now remove the ones that are already known to be ancestral
-    A_list_markers=A_list_markers-sample_A_set
-    #for recurrent snps: remove the ones that are imputed to be derived
-    A_list_markers=A_list_markers-max_d
-
-    if len(A_list_markers) > 0:
-        filtered_df = df[df.index.isin(A_list_markers)]
-        unfiltered_df = df[~df.index.isin(A_list_markers)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
-        filtered_df.loc[:,col_name]="a" #make the all derived (filling gaps step) #*for inference
-        df=pd.concat([filtered_df,unfiltered_df])
+        if len(A_list_markers) > 0:
+            filtered_df = df[df.index.isin(A_list_markers)]
+            unfiltered_df = df[~df.index.isin(A_list_markers)] #ALL OTHER VARIANTS to combine in the end with the altered filtered_df 
+            filtered_df.loc[:,col_name]="a" #make the all derived (filling gaps step) #*for inference
+            df=pd.concat([filtered_df,unfiltered_df])
 
 #flatten list of sets:
 questionable_SNPs=list(questionable_SNPs)
 #remove "snp" called ROOT (that is not a real snp)
 df = df[df.index != "ROOT"]
 
+def get_variant_code(row, samp):
+    val = row[f"{samp}_y"]
+    if pd.isna(val):
+        return val  # Keep NaN
+    elif val == row["REF"]:
+        return "0:999"
+    else: #allele is alt
+        alt_alleles = str(row["ALT"]).split(",")
+        try:
+            idx = alt_alleles.index(val)
+            return f"{idx + 1}:999"  # ALT indices start at 1
+        except ValueError:
+            return val  # Not found in ALT list → leave unchanged
+
 #If user wants nucleotides instead of allelic states
+if args.v == True:
+    vcf_input_folder = args.input
+    output_path = args.output + "_phyloimputed.vcf.gz"
+    with open(log_filename, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f.write(f'[{timestamp}]\tStart merging vcf files\n')
+    merge_vcfs(vcf_input_folder, output_path)
+    with open(log_filename, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f.write(f'[{timestamp}]\tSuccessfully merged vcf files\n')
+    #Open as df
+    data = []
+    columns = []
+    with gzip.open(output_path, 'rt') as file:  # 'rt' = read text mode
+        for line in file:
+            if line.startswith("##bcftools_mergeCommand=merge"):
+                #To make sure the sample column headers match the vcf files (not the original BAM files)
+                line = line.replace("##bcftools_mergeCommand=merge -Oz --force-samples -o", "")
+                lst = line.split()
+                lst = lst[1:-5]
+                lst = [item.replace(".vcf.gz;","") for item in lst]
+                lst = [item.replace(".vcf.gz","") for item in lst]
+                lst = [item.split("/")[-1] for item in lst]
+            elif line.startswith('#CHROM'):
+                # Split header line to get column names
+                columns = line.strip().split('\t')
+                #replace sample names to match the vcf files
+                for i in range(len(lst)):
+                    i = i +1
+                    columns[-i] = lst[-i]
+            elif not line.startswith('##'):
+                data.append(line.strip().split('\t'))
+    merged_vcf = pd.DataFrame(data, columns=columns)
+
+    merged_vcf_pos = merged_vcf["POS"].values.tolist()
+    #remove unimputed alleles and missing alleles
+    pd.set_option('future.no_silent_downcasting', True)
+    df_trimmed = df.replace({'A': np.nan, 'D': np.nan, 'X': np.nan})
+    
+    df_trimmed = df_trimmed.dropna(how='all') #remove rows that are completly NaN in all samples
+    dic_relevant = pd.DataFrame()
+    dic_relevant[[args.vcf_ref, "Anc", "Der","marker"]] = dic[[args.vcf_ref, "Anc", "Der","marker"]]
+    dic_relevant = dic_relevant.drop_duplicates()
+    #Merge trimmed df and dic_relevant
+    df_dic_merge = dic_relevant.merge(df_trimmed, left_on="marker", right_index=True, how= "inner")
+    for col in df_dic_merge.columns[4:]:  # from 5th column onward
+        df_dic_merge[col] = df_dic_merge.apply(
+            lambda row: row["Anc"] if row[col] == "a" else row["Der"] if row[col] == "d" else row[col],
+            axis=1)
+    df_dic_merge = df_dic_merge.drop(columns=["Anc","Der"])
+   
+
+    #split imputation file into positions that are already in vcf file and those that are not
+    df_dic_merge_exi = df_dic_merge[df_dic_merge[args.vcf_ref].isin(merged_vcf_pos)]
+    df_dic_merge_new = df_dic_merge[~df_dic_merge[args.vcf_ref].isin(merged_vcf_pos)]
+    samp_list = list(df_dic_merge_exi.columns[2:])
+
+    #Process existing positions
+    #merge vcf and existing imp snps
+    merge_vcf_imp_exi = merged_vcf.merge(df_dic_merge_exi, left_on="POS", right_on=str(args.vcf_ref), how= "left")
+
+    #Now compare the info from original _x and imputed _y column of each sample/panel vcf
+    
+    #Update Alt column of merge_vcf_imp_exi
+    samp_y_cols = [col for col in merge_vcf_imp_exi.columns if col.endswith('_y')]
+
+    
+    def fill_alt_from_y(row, samp_y_cols):
+        if row["ALT"] != ".":
+            return row["ALT"]  # Keep existing ALT
+
+        # Gather all values from *_y columns that are not equal to REF and not NaN
+        alternatives = {
+            row[col]
+            for col in samp_y_cols
+            if pd.notna(row[col]) and row[col] != row["REF"]
+        }
+
+        if not alternatives:
+            return "."  # Keep as-is if no valid alternative alleles
+        return ",".join(sorted(alternatives))  # Sorted for consistent ordering
+    
+    # Apply this function row-wise
+    merge_vcf_imp_exi["ALT"] = merge_vcf_imp_exi.apply(lambda row: fill_alt_from_y(row, samp_y_cols), axis=1)
+
+    for samp in samp_list:
+        # Apply the function row-wise
+        merge_vcf_imp_exi[f"{samp}_y"] = merge_vcf_imp_exi.apply(lambda row: get_variant_code(row, samp), axis=1)
+
+        merge_vcf_imp_exi.loc[merge_vcf_imp_exi[f"{samp}_x"].astype(str).str.startswith(".") & merge_vcf_imp_exi[f"{samp}_y"].notna(), f"{samp}_x"] = merge_vcf_imp_exi[f"{samp}_y"]
+        merge_vcf_imp_exi = merge_vcf_imp_exi.drop(columns=[f"{samp}_y"])
+        merge_vcf_imp_exi = merge_vcf_imp_exi.rename(columns={f"{samp}_x":f"{samp}"})
+
+
+    merge_vcf_imp_exi = merge_vcf_imp_exi.drop(columns=[args.vcf_ref,"marker"])
+    merge_vcf_imp_exi = merge_vcf_imp_exi.drop_duplicates(subset="POS").reset_index(drop=True) 
+    #COMBINE with new SNPs
+    ref_dic = ref_dic[["Ref",args.vcf_ref,"Anc","Der"]]
+    ref_dic = ref_dic.drop_duplicates()
+    df_dic_merge_new_ref = df_dic_merge_new.merge(ref_dic, left_on=args.vcf_ref, right_on=args.vcf_ref, how="left")
+    
+    #Add to Alt column the observations in the imputed dataset
+    df_dic_merge_new_ref = df_dic_merge_new_ref.drop_duplicates(subset = [args.vcf_ref])
+    df_dic_merge_new_ref["Alt"] = df_dic_merge_new_ref.apply(
+    lambda row: ",".join(
+        sorted(set(
+            val for val in row.iloc[2:-2]
+            if pd.notna(val) and val != row["Ref"]
+        ))
+    ) if any(pd.notna(val) and val != row["Ref"] for val in row.iloc[2:-2]) else ".",
+    axis=1
+    )
+
+    #replace N with .:.
+    for samp in samp_list:
+        df_dic_merge_new_ref[samp] = df_dic_merge_new_ref[samp].replace("N", ".:.").fillna(".:.")    
+        #add imputation code
+        df_dic_merge_new_ref[f"{samp}"] = df_dic_merge_new_ref.apply(
+            lambda row: (
+                "0:999" if row[f"{samp}"] == row["Ref"]
+                else row[f"{samp}"] if row[f"{samp}"] == ".:."
+                else (
+                    # Attempt to find match in ALT list
+                    (lambda alt_alleles, val: (
+                        f"{alt_alleles.index(val) + 1}:999" if val in alt_alleles else val
+                    ))(str(row["Alt"]).split(","), row[f"{samp}"])
+                ) if pd.notna(row[f"{samp}"])
+                else np.nan
+            ),
+            axis=1
+        )
+
+    
+    df_dic_merge_new_ref = df_dic_merge_new_ref.drop(columns=["marker"])
+    df_dic_merge_new_ref = df_dic_merge_new_ref.rename(columns={args.vcf_ref:"POS"})
+    df_dic_merge_new_ref.insert(0, "#CHROM", args.vcf_chr)
+    
+    df_dic_merge_new_ref.insert(2, "FORMAT", ".")
+    df_dic_merge_new_ref.insert(2, "INFO", ".")
+    df_dic_merge_new_ref.insert(2, "FILTER", ".")
+    df_dic_merge_new_ref.insert(2, "QUAL", ".")
+    
+    alt_col = df_dic_merge_new_ref.pop("Alt")
+    df_dic_merge_new_ref.insert(2, "ALT", alt_col)
+    
+    ref_col = df_dic_merge_new_ref.pop("Ref")
+    df_dic_merge_new_ref.insert(2, "REF", ref_col)
+    df_dic_merge_new_ref.insert(2, "ID", ".")
+
+    #combine dfs
+    vcf_df = pd.concat([merge_vcf_imp_exi, df_dic_merge_new_ref], ignore_index=True)
+    vcf_df ["POS"] = vcf_df ["POS"].astype(int)
+    vcf_df  = vcf_df.sort_values(by="POS")
+    vcf_df = vcf_df.drop(columns=["Anc","Der"])
+
+    
+    #Now replace the imputed content in the multisample vcf file
+    
+    header_lines = []
+    output_path2 = os.path.join(args.output + "_phyloimputed.vcf")
+
+    # Read gzip VCF header (not the data)
+    with gzip.open(output_path, "rt") as infile:
+        for line in infile:
+            if line.startswith("#CHROM"):
+                header_lines.append('##FORMAT=<ID=IMP,Number=1,Type=String,Description="Imputation flag: IMP=999 means phyloimputed">\n')
+                break
+            else:
+                header_lines.append(line)
+
+    # Write header lines + DataFrame header + data rows to uncompressed VCF file
+    with open(output_path2, "wt") as outfile:
+        # Write the original header lines
+        for line in header_lines:
+            outfile.write(line)
+
+        # Write the DataFrame header line (tab-separated column names)
+        outfile.write('\t'.join(vcf_df.columns) + '\n')
+
+        # Write DataFrame rows
+        for _, row in vcf_df.iterrows():
+            outfile.write('\t'.join(map(str, row)) + '\n')
+        
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    with open(log_filename, "a") as f:
+        f.write(f'[{timestamp}]\tFinished saving phyloimputed multi-sample vcf file in {output_path}\n')
 
     
 if args.nucleotide:
-    print("nucl")
-    print(df)
-    dic = dic.drop(columns=["GRCh37","GRCh38","T2T","Hg"])
-    dic = dic.drop_duplicates()
-    dic = dic.drop_duplicates(subset='marker')
-    dic_indexed = dic.drop_duplicates(subset='marker').set_index('marker')
+    with open(log_filename, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f.write(f'[{timestamp}]\tStart converting allelic states to nucleotides\n')
+    dic_2 = dic.drop(columns=["GRCh37","GRCh38","T2T","Hg"])
+    # dic_2 = dic_2.drop_duplicates()
+    dic_2 = dic_2.drop_duplicates(subset='marker')
+    dic_indexed = dic_2.drop_duplicates(subset='marker').set_index('marker')
 
     # first define the transformation function
     def transform_row(row):
@@ -537,6 +968,18 @@ np.savetxt(path_conflicting_SNPs, questionable_SNPs, delimiter="\t", fmt="%s", c
 
 end_time = time.time()
 elapsed_time = end_time - start_time
+with open(log_filename, "a") as f:
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    f.write(f'[{timestamp}]\tSaved output files\n')
+    f.write(f'[{timestamp}]\tFinished run\n')
+    f.write(f"""
+                  ┌─ PHYLOIMPUTE COMPLETE!
+              ┌───┤
+              │   └─ Script completed in {elapsed_time:.2f} seconds.
+──────────────┤
+              └─ :)
+""")
+
 
 print("\n\n")
 
