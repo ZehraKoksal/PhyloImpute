@@ -92,10 +92,12 @@ Option to receive nucleotides (A/a, C/c, G/g, T/t, N) instead of default ancestr
 PhyloImpute compares allelic states of all observed SNPs with the SNP relationships in the phylogenetic tree to verify the accuracy of the phylogenetic tree and the sequencing data.
 
 It outputs:
-- Predicted haplogroup: based on tree branch with the most SNPs that are present in the analyzed sequence ("main tree branch")
+- Predicted haplogroup: based on tree branch with the most SNPs that are present in the analyzed sequence ("main tree branch"). PhyloImpute v1.3 prefixes each haplogroup with an **asterisk (*)** if the **Penalty Value 1** is higher than the **Confidence Value** (see below) to indicate potentially erroneous predictions that require manual inspection.
 - **Confidence value**: proportion of derived alleles in main tree branch. Low value can be due to low sequence coverage.  
 - **Penalty value 1**: proportion of ancestral alleles in main branch. The observed ancestral alleles could be the consequence of backmutations, but a high penalty value could hint towards an incorrect haplogroup prediction.  
-- **Penalty value 2**: proportion of derived alleles in parallel branches. Markers in parallel branches in the derived allelic state could be the consequence of recurrent mutations that are identical by state, rather than by descent. However, a high penalty value 2 could indicate that the sequencing data comprises a mixture of DNA from different individuals.    
+- **Penalty value 2**: proportion of derived alleles in parallel branches. Markers in parallel branches in the derived allelic state could be the consequence of recurrent mutations that are identical by state, rather than by descent. However, a high penalty value 2 could indicate that the sequencing data comprises a mixture of DNA from different individuals.
+- **downstream_ancestral**:Indicates downstream haplogroups and the specific SNPs that were found in ancestral state.
+- **downstream_unknown**:Indicates downstream haplogroups and the specific SNPs that were found in unknown state. Taking this information into account may help in assessing whether the predicted haplogroup is potentially lacking resolution due to missing downstream alleles.
 <br>
 
 ##### 3.1.1.3.3) conflicting_SNPs.csv
@@ -104,6 +106,10 @@ Contains SNPs that cause penalty values:
 - "(derived allele inside parallel branch)" → penalty value 2
 
 In the main output file (phyloimputed.csv), PhyloImpute keeps the observed allelic states.
+
+##### 3.1.1.3.4) logfile
+Generates a log file containing the commands executed by the tool, with each entry timestamped for easier tracking and reproducibility.
+
 <br>
 
 #### 3.1.2) VCF file
@@ -161,7 +167,7 @@ One example can be viewed in the test_run folder provided here.
 ##### 3.1.2.2.3) Custom tree marker dictionary
 Required when using `-customtree`. Structure:
 
-<img src="/test_run/images/dictionary_file.png" alt="Dictionary file format" width="350"/>
+<img src="/test_run/images/dictionary_file.png" alt="Dictionary file format" width="550"/>
 
 Columns:
 - **marker**: names used in tree  
