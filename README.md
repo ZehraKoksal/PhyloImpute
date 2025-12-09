@@ -124,11 +124,12 @@ python PhyloImpute.py -input_format vcf -input ./test_run/input_vcf/ -output ./o
 | `-vcf_chr`       | Chromosome ID in the VCF file (e.g., `NC_000024.9` for GRCh37).                                                   | Required                          |
 | `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                               | Optional (used with `-customtree`)|
 | `-nucleotide`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                | Optional                          |
+| `-v`   | Parameter allows multisample vcf files as input. The imputed output file will change accordingly adding ":999" suffix after imputed allele (0,1, ...).                | Optional                          |
 
 <br>
 
 #### 3.1.2.1) VCF Input file
-Provide a folder containing all `.vcf` files.  
+Provide a folder containing all `.vcf` files.  Or one multisampel vcf file by using parameter `-v`.
 <br>
 
 #### 3.1.2.2) Phylogenetic tree
@@ -166,7 +167,8 @@ Columns:
 - **marker**: names used in tree  
 - **GRCh37**, **GRCh38**, **T2T**: positions  
 - **Anc**, **Der**: alleles  
-- **Hg**: haplogroups  
+- **Hg**: haplogroups
+- **Ref**: reference allele according to chosen reference genome (i.e., GRCh37, GRCH38 or T2T).
 <br>
 
 #### 3.1.2.3) Output files
