@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented here.
 
-## Upcoming updates for [v1.3]
+## [v1.3] - 2025-12-09
 ### Added
 - ability to input also multisample vcf files
 - uncertainty warning for user: Asterisk * before predicted haplogroup (if Confidence value < Penalty value 1)
