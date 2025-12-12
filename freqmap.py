@@ -8,6 +8,7 @@ import pandas as pd
 import math
 import numpy as np
 import subprocess
+import matplotlib
 import warnings
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
@@ -16,6 +17,8 @@ import geopandas as gpd
 from shapely.geometry import Point
 from matplotlib.colors import LinearSegmentedColormap
 import geopandas
+
+matplotlib.use("Agg")
 
 
 #User input paths
