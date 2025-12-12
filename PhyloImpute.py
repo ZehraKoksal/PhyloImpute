@@ -131,6 +131,10 @@ def check_for_vcf_files(directory):
         print('\nNo .vcf files found.')
         return []
 
+#Set this as default to avoid errors
+if args.input_format == "csv":
+    args.vcf_ref="GRCh37"
+
 if args.tree=="Y_minimal":
     dic= pd.read_csv("./Y_minimal_dic.csv", sep="\t")
     #list of positions frm dictionary to filter from vcf file
