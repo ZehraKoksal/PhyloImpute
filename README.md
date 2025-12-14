@@ -38,6 +38,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 | `-input`         | Path to the input file.                                                                                      | Required                          |
 | `-tree`          | Path to the available phylogenetic tree. Options: `Y_minimal`, `NAMQY`, `ISOGG_2020`.                        | Optional* (mutually exclusive with customtree)        |
 | `-customtree`    | Path to a custom phylogenetic tree.                                                                          | Optional* (mutually exclusive with tree)    |
+| `-vcf_dic`       | Dictionary file for custom tree markers (only used when `-customtree` is provided).                               | Optional (used with `-customtree`)|
 | `-output`        | Path to an existing folder where output files will be saved.                                                 | Required                          |
 | `-nucleotide`   | Parameter allows obtaining nucleotides (A,C,G,T,N). Default: Obtaining ancestral states (A, D, X).                     | Optional                          |
 
@@ -65,7 +66,7 @@ python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output .
 ##### 3.1.1.2.2) Custom phylogenetic tree
 Alternatively, custom phylogenetic trees can be provided:
 ```bash
-python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output ./output -customtree ./test_run/minimal_y_tree_hgs_custom_example.csv
+python PhyloImpute.py -input_format csv -input ./test_run/testdata.csv -output ./output -customtree ./test_run/minimal_y_tree_hgs_custom_example.csv -vcf_dic ./Y_minimal_dic.csv
 ```
 
 The custom phylogenetic tree must be provided in tab-separated `.csv` format.  
@@ -75,7 +76,24 @@ It follows the ISOGG tree nomenclature and this structure:
 
 - SNPs that cannot be separated ("equal") are comma-separated in the same branch (green).  
 - SNPs of downstream branches are indented using a tab (orange).  
-- SNPs from parallel branches are in separate rows (blue).  
+- SNPs from parallel branches are in separate rows (blue).
+
+##### 3.1.1.2.3) Custom tree marker dictionary
+Required when using `-customtree`. The custom phylogenetic tree needs to be supplemented with a dictionary file (vcf_dic).
+
+Structure:
+
+<img src="/test_run/images/dictionary_file.png" alt="Dictionary file format" width="550"/>
+
+Columns:
+- **marker**: names used in tree  
+- **GRCh37**, **GRCh38**, **T2T**: positions  
+- **Anc**, **Der**: alleles  
+- **Hg**: haplogroups
+- **Ref**: reference allele according to chosen reference genome (i.e., GRCh37, GRCH38 or T2T).
+<br>
+
+
 <br>
 
 #### 3.1.1.3) Output files
