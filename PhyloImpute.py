@@ -64,11 +64,11 @@ def merge_vcfs(vcf_folder, output_vcf="merged.vcf.gz"):
     for vcf in vcf_files:
         if vcf.endswith(".vcf"):
             gz = vcf + ".gz"
-            with open(gz, "wb") as out:# Compress with bgzip_rocky, writing to gz
-                subprocess.run(["bgzip_rocky", "-c", vcf], stdout=out, check=True)
-            subprocess.run(["tabix_rocky", "-p", "vcf", gz], check=True)# Index with tabix_rocky
+            with open(gz, "wb") as out:# Compress with bgzip, writing to gz
+                subprocess.run(["bgzip", "-c", vcf], stdout=out, check=True)
+            subprocess.run(["tabix", "-p", "vcf", gz], check=True)# Index with tabix
             compressed_files.append(gz)
-    cmd = ["bcftools-1.20-rocky", "merge", "-Oz", "--force-samples", "-o", output_vcf] + compressed_files #"--force-samples", because of duplicate sample names
+    cmd = ["bcftools", "merge", "-Oz", "--force-samples", "-o", output_vcf] + compressed_files #"--force-samples", because of duplicate sample names
     subprocess.run(cmd, check=True)
     # Clean up
     to_remove = [f + ".gz" for f in vcf_files] + [f + ".gz.tbi" for f in vcf_files]
