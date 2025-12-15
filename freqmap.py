@@ -64,8 +64,15 @@ custom_cmap = LinearSegmentedColormap.from_list("custom", color_list)
 coordinates= pd.read_csv(args.f_coordinates, sep="\t")
 coordinates.columns=["sample","lat","lon"]
 
+# print(coordinates)
+# print(len(coordinates))
 
 df= pd.read_csv(args.input, sep="\t")
+
+# if df.shape[1] == len(coordinates)+2: #for when the csv input is the input
+    # df = df.iloc[:, 1:]
+# print(df)
+# print(ee)
 df.set_index(df.columns[0], inplace=True)
 df_snp = df.loc[[args.f_snp]]
 df_snp = df_snp.T
