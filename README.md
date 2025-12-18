@@ -14,7 +14,21 @@ Type in the shell:
 git clone https://github.com/ZehraKoksal/PhyloImpute.git
 cd PhyloImpute/
 python PhyloImpute.py -h
-```  
+```
+
+**Following tools should be installed:**
+A) python libraries (can be installed with "pip install ..." inside virtual environment)
+pandas (v.2.1.6)
+numpy (v.1.26.4)
+matplotlib (v.3.9.2)
+scipy (v.1.14.1)
+geopandas (v.1.0.1)
+shapely (v.2.0.6)
+
+B) native command-line tools (These can be skipped, if you do NOT use the "-v" parameter [see details below])
+bgzip (v.1.19)
+bcftools (v.1.20)
+tabix (v.1.19)
 <br>
 
 ### 3) Algorithm and Commands
