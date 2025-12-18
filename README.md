@@ -269,6 +269,8 @@ python PhyloImpute.py -freqmap -input ./sample_data.csv -output ./freqmap -f_snp
 <img src="/test_run/images/snp1_ecu.png" alt="country_specific_allele_frequency_map" width="500"/>
 
 ### 4) Graphical user interface
-A graphical user interface of PhyloImpute v1.1 is available for windows: 
-Access the link and follow the instructions: https://zenodo.org/records/15864850
+PhyloImpute v1.3 with a graphical user interface (GUI) is available for windows and linux: 
+[Access the link: https://zenodo.org/records/15864850](https://zenodo.org/records/17950955)
+Via the link you can also access a tutorial for the GUI.
+
 <br><br>
