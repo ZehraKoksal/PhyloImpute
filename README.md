@@ -18,7 +18,7 @@ python PhyloImpute.py -h
 
 The following tools must be installed before running this software.
 
-### A) Python libraries  
+#### A) Python libraries  
 Install these **inside a virtual environment** using `pip install ...`:
 
 - **pandas** (v2.1.6)  
@@ -28,7 +28,7 @@ Install these **inside a virtual environment** using `pip install ...`:
 - **geopandas** (v1.0.1)  
 - **shapely** (v2.0.6)
 
-### B) Native command-line tools  
+#### B) Native command-line tools  
 These tools are **optional** and only required if you use the `-v` parameter (see details below):
 
 - **bgzip** (v1.19)  
